@@ -113,6 +113,8 @@ describe('(ekke) Subway', function () {
 
   describe('#request', function () {
     it('makes a HTTP request', async function () {
+      this.timeout(5000);
+
       const resp = await sub.request({
         url: 'https://google.com',
         method: 'GET'

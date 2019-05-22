@@ -18,6 +18,8 @@ describe('(ekke) Evaluator', function () {
   beforeEach(create);
 
   describe('bundle interactions:', function () {
+    this.timeout(5000);
+
     let bundle;
 
     before(async function () {

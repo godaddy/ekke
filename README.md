@@ -1,4 +1,7 @@
 # `EKKE`
+
+[![Greenkeeper badge](https://badges.greenkeeper.io/godaddy/ekke.svg)](https://greenkeeper.io/)
+
 #### [Ekke-Ekke-Ekke-Ekke][NI] PTANG Zoo Boing! Z' nourrwringmm[...][Ekke]
 
 `ekke` a unique new test runner for React-Native. Unlike other testing

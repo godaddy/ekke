@@ -21,7 +21,7 @@ API to the platform has to offer.
   allows you to mount and render components in your test suite.
 
 <p align="center">
-  <img width="800" height="607" src="./docs/ekke-react-native-intro.gif" />
+  <img width="800" height="607" src="https://raw.githubusercontent.com/godaddy/ekke/master/docs/ekke-react-native-intro.gif" />
   <br />
   <sub>Ekke in action: running a test suite, streaming results back to the CLI</sub>
 </p>

@@ -1,0 +1,96 @@
+{
+  "name": "ekke",
+  "version": "1.0.0",
+  "description": "Ekke is a test runner that allows you to execute your tests on the actual device",
+  "main": "api/index.js",
+  "react-native": "ekke.js",
+  "scripts": {
+    "example:mocha": "./bin/ekke run examples/*.mocha.js --using mocha",
+    "example:tape": "./bin/ekke run examples/*.tape.js --using tape",
+    "example:tap-spec": "./bin/ekke run examples/*.tape.js --using tape | tap-spec",
+    "ios": "react-native run-ios",
+    "setup": "react-native eject",
+    "start": "node node_modules/react-native/local-cli/cli.js start",
+    "lint": "eslint-godaddy-react native/*.js examples/*.js api/*.js api/**/*.js \"api/**/*(metro|commands)*/*.js\" runners/*.js components/*.js *.js test/**/**/*.js",
+    "test:ekke": "./bin/ekke run test/ekke/**/*.js test/ekke/*.js --using mocha",
+    "test:examples": "npm run example:mocha && npm run example:tape && npm run example:tap-spec",
+    "test:nodejs": "nyc --reporter=text --reporter=json-summary npm run test:runner",
+    "test:runner": "mocha --require setup-env --require test/mock \"test/*(native|api)/*.*(test|spec).js\"",
+    "test:watch": "npm run test:runner -- --watch",
+    "test:all": "npm run test:examples && npm run test:ekke && npm run test:nodejs",
+    "test": "npm run test:nodejs"
+  },
+  "bin": {
+    "ekke": "./bin/ekke"
+  },
+  "author": "GoDaddy Operating Company, LLC",
+  "contributors": [
+    "Arnout Kazemier (https://github.com/3rd-Eden)"
+  ],
+  "license": "MIT",
+  "setup": {
+    "/**/": [
+      "!! important !!",
+      "The babel config for the tests is placed in a directory that cannot be",
+      "automatically resolved by babel, this is intentional, as it prevents",
+      "the metro bundler from using it for compilation.",
+      "!! important !!"
+    ],
+    "babel": {
+      "configFile": "./test/.babelrc"
+    }
+  },
+  "dependencies": {
+    "argh": "^1.0.0",
+    "babel-plugin-rewrite-require": "^1.14.5",
+    "diagnostics": "^2.0.0",
+    "es-paint": "^2.0.0",
+    "eventemitter3": "^3.1.2",
+    "failure": "^1.1.1",
+    "glob": "^7.1.3",
+    "json-stringify-safe": "^5.0.1",
+    "millisecond": "^0.1.2",
+    "node-libs-react-native": "^1.0.3",
+    "one-time": "^1.0.0",
+    "process": "^0.11.10",
+    "prop-types": "^15.7.2",
+    "querystringify": "^2.1.1",
+    "references": "0.0.0",
+    "stream-browserify": "^2.0.2",
+    "tick-tock": "^1.0.0",
+    "ultron": "^1.1.1",
+    "yeast": "^0.1.2"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.1.5",
+    "@babel/core": "^7.1.5",
+    "@babel/plugin-proposal-object-rest-spread": "^7.0.0",
+    "@babel/preset-env": "^7.1.5",
+    "@babel/preset-react": "^7.0.0",
+    "@babel/register": "^7.0.0",
+    "assume": "^2.2.0",
+    "asyncstorageapi": "^1.0.2",
+    "babel-eslint": ">=7.2.1 <11.0.0",
+    "chai": "^4.2.0",
+    "eslint": "^5.16.0",
+    "eslint-config-godaddy-react": "^5.0.0",
+    "eslint-plugin-json": "^1.4.0",
+    "eslint-plugin-jsx-a11y": "^6.2.1",
+    "eslint-plugin-mocha": "^5.3.0",
+    "eslint-plugin-react": "^7.13.0",
+    "mocha": "^6.1.4",
+    "nock": "^10.0.6",
+    "nyc": "^14.1.0",
+    "react": "^16.8.6",
+    "react-native": "^0.59.8",
+    "require-poisoning": "^2.0.0",
+    "setup-env": "^1.2.2",
+    "tap-spec": "^5.0.0",
+    "tape": "^4.10.1",
+    "xhr2": "^0.1.4"
+  },
+  "peerDependencies": {
+    "react": "^16.8.6",
+    "react-native": "^0.59.6"
+  }
+}

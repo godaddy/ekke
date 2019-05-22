@@ -28,6 +28,10 @@
     "Arnout Kazemier (https://github.com/3rd-Eden)"
   ],
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:godaddy/ekke.git"
+  },
   "setup": {
     "/**/": [
       "!! important !!",

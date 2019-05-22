@@ -70,6 +70,8 @@ android
 
 # Above this line should be a copy of our .gitignore
 # Additional files that need to be ignore before publish
+.github
+.circleci
 test*
 docs
 examples

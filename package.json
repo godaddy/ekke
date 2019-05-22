@@ -44,6 +44,14 @@
       "configFile": "./test/.babelrc"
     }
   },
+  "greenkeeper": {
+    "commitMessages": {
+      "dependencyUpdate": "[deps] Update ${dependency} to version ${version}",
+      "devDependencyUpdate": "[deps|dev] Update ${dependency} to version ${version}",
+      "dependencyPin": "[deps] Pin ${dependency} to ${oldVersion}",
+      "devDependencyPin": "[deps|dev] Fix: Pin ${dependency} to ${oldVersion}"
+    }
+  },
   "dependencies": {
     "argh": "^1.0.0",
     "babel-plugin-rewrite-require": "^1.14.5",

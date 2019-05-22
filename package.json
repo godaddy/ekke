@@ -1,6 +1,6 @@
 {
   "name": "ekke",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Ekke is a test runner that allows you to execute your tests on the actual device",
   "main": "api/index.js",
   "react-native": "ekke.js",

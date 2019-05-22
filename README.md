@@ -482,6 +482,7 @@ For more detailed information about [diagnostics], please see their project page
 [MIT](LICENSE)
 
 [diagnostics]: https://github.com/3rd-Eden/diagnostics
+[metro]: https://github.com/facebook/metro
 [NI]: https://en.wikipedia.org/wiki/Knights_Who_Say_%22Ni!%22
 [Ekke]: https://youtu.be/RZvsGdJP3ng?t=17
 [env]: ./index.js

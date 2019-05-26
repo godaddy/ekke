@@ -1,6 +1,13 @@
 const EventEmitter = require('eventemitter3');
 const diagnostics = require('diagnostics');
+const { borked } = require('borked');
+const ms = require('millisecond');
 const cli = require('argh').argv;
+
+//
+// Create a debugger.
+//
+const debug = diagnostics('ekke:api');
 
 /**
  * A basic API, and CLI interface for Ekke. The only difference between
@@ -16,6 +23,11 @@ class Ekke extends EventEmitter {
     super();
 
     const ekke = this;
+
+    this.plugins = {
+      modify: new Map(),      // Store our modifier functions.
+      bridge: new Map()       // Store the bridge functions.
+    };
 
     /**
      * Merge the options, with our defaults to create our API configuration.
@@ -71,17 +83,26 @@ class Ekke extends EventEmitter {
   /**
    * Initialize our API.
    *
-   * @public
+   * @private
    */
   initialize() {
     //
     // Introduce our commands to the prototype.
     //
     Object.entries(Ekke.commands).forEach(([method, fn]) => {
+      if (method in this) debug(`overriding existing method(${method})`);
+
       this[method] = fn.bind(this, {
         debug: diagnostics(`ekke:${method}`),
         ekke: this
       });
+    });
+
+    //
+    // Pre-bind our utility functions.
+    //
+    ['use', 'exec'].forEach(method => {
+      this[method] = this[method].bind(this);
     });
 
     //
@@ -93,9 +114,90 @@ class Ekke extends EventEmitter {
     this.on('error', args => console.error(...args));
 
     //
-    // Generic event handling
+    // Generic event handling.
     //
     this.on('ping', (args, send) => send('pong', args));
+  }
+
+  /**
+   * Execute all assigned functions for the given map & method.
+   *
+   * @param {String} name Name of the plugin map we should run on.
+   * @param {String} method Name of the method we want to execute.
+   * @param {Object} data Data the functions should receive.
+   * @public
+   */
+  async exec(name, method, data = {}, ...args) {
+    const map = this.plugins[name];
+    const methods = map.get(method);
+    let result = data;
+
+    if (!methods) return result;
+
+    for (let i = 0; i < methods.length; i++) {
+      const fn = methods[i].fn;
+      const name = fn.displayName || fn.name;
+      const timeout = ms(fn.timeout || '20 seconds');
+
+      try {
+        result = await borked(fn(result, ...args), timeout) || result;
+      } catch (e) {
+        debug(`failed to execute(${name})`, e);
+      }
+    }
+
+    return result;
+  }
+
+  /**
+   * Register a new plugin.
+   *
+   * @param {String|Function} name The name of the plugin.
+   * @public
+   */
+  use(name) {
+    let plugin;
+
+    if (typeof name === 'function') plugin = name;
+    else plugin = require(name);
+
+    /**
+     * Assign a plugin in their correct Map() instance.
+     *
+     * @param {Map} map The map we should register our method in.
+     * @param {String} method Name of the event/method.
+     * @param {Function} fn Function to be invoked.
+     * @param {Object} options Plugin method configuration.
+     * @private
+     */
+    function assign(map, method, fn, { priority = 100 } = {}) {
+      const previous = map.get(method) || [];
+
+      map.set(method, previous.concat({ fn, priority }).sort(function sort(a, b) {
+        return b.priority - a.priority;
+      }));
+    }
+
+    plugin({
+      modify: assign.bind(assign, this.plugins.modify),
+      bridge: assign.bind(assign, this.plugins.bridge),
+
+      /**
+       * Registers a new method on the API.
+       *
+       * @param {String} method Name of the API method we want to register.
+       * @param {Function} fn Function to assign as method.
+       * @public
+       */
+      register: (method, fn) => {
+        if (method in this) debug(`plugin is overriding existing method ${method}`);
+
+        this[method] = fn.bind(this, {
+          debug: diagnostics(`ekke:${method}`),
+          ekke: this
+        });
+      }
+    });
   }
 }
 

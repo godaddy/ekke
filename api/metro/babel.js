@@ -1,5 +1,6 @@
 const { getCacheKey } = require('metro-react-native-babel-transformer');
 const { transformSync } = require('@babel/core');
+const merge = require('babel-merge');
 const aliases = require('./aliases');
 
 /**
@@ -14,7 +15,7 @@ function presets(existing = [], options) {
   const { experimentalImportSupport, ...presetOptions } = options;
 
   return [
-    [require('metro-react-native-babel-preset'), {
+    [require.resolve('metro-react-native-babel-preset'), {
       ...presetOptions,
 
       disableImportExportTransform: experimentalImportSupport,
@@ -37,11 +38,11 @@ function plugins(existing = [], options) {
   const optional = [];
 
   if (options.inlineRequires) {
-    optional.push(require('babel-preset-fbjs/plugins/inline-requires'));
+    optional.push(require.resolve('babel-preset-fbjs/plugins/inline-requires'));
   }
 
   return [
-    [require('babel-plugin-rewrite-require'), {
+    [require.resolve('babel-plugin-rewrite-require'), {
       throwForNonStringLiteral: true,
       aliases
     }],
@@ -72,21 +73,34 @@ function transform(transformOptions) {
   const old = process.env.BABEL_ENV;
   process.env.BABEL_ENV = options.dev ? 'development' : old || 'production';
 
-  try {
-    const result = transformSync(src, {
-      caller: {
-        name: 'metro',
-        platform: options.platform
-      },
-      ast: true,
-      babelrc: !!options.enableBabelRCLookup,
-      code: false,
-      highlightCode: true,
-      filename: filename,
+  //
+  // Configuration is given using the `process.env.EKKE_BABEL` flag as JSON
+  // blob as the babel transformation works in a worker farm.
+  //
+  // @TODO see if we can re-use the transformOptions that are passed through
+  // metro.
+  //
+  const external = process.env.EKKE_BABEL ? JSON.parse(process.env.EKKE_BABEL) : {};
+  const config = {
+    caller: {
+      name: 'metro',
+      platform: options.platform
+    },
+    ast: true,
+    babelrc: !!options.enableBabelRCLookup,
+    code: false,
+    highlightCode: true,
+    filename: filename,
+    sourceType: 'unambiguous',
+
+    ...merge({
       presets: presets([], options),
       plugins: plugins(transformOptions.plugins, options),
-      sourceType: 'unambiguous'
-    });
+    }, external)
+  };
+
+  try {
+    const result = transformSync(src, config);
 
     //
     // When a file is ignored, it doesn't return a result, so we need to

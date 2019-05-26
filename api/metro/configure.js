@@ -14,10 +14,11 @@ const debug = diagnostics('ekke:configure');
  * the tests.
  *
  * @param {Object} flags The configuration flags of the API/CLI.
+ * @param {Function} exec Trigger events.
  * @returns {Promise<Object>} configuration.
  * @public
  */
-async function configure(flags) {
+async function configure(flags, exec) {
   const reactNativePath = path.dirname(require.resolve('react-native/package.json'));
   const config = await loadConfig();
   const custom = {
@@ -63,6 +64,23 @@ async function configure(flags) {
   // babel and that requires our own custom transformer.
   //
   custom.transformer.babelTransformerPath = path.join(__dirname, 'babel.js');
+
+  //
+  // Metro uses the (jest) worker farm to create multiple babel transform
+  // processes to speed up the build time. This is also the reason why they
+  // use a `babelTransformerPath` instead of allowing a function.
+  //
+  // So in order for plugins to modify the babel config, we're going to allow
+  // the use the JSON syntax of babel, so we can inject that to the
+  // `process.env` which will be passed to the worker processes.
+  //
+  const babel = await exec('modify', 'babel');
+
+  try {
+    process.env.EKKE_BABEL = JSON.stringify(babel);
+  } catch (e) {
+    throw new Error('Plugins are only allowed return JSON in the babel modifier');
+  }
 
   custom.resolver.extraNodeModules = {
     [fake]: process.cwd()
@@ -148,7 +166,7 @@ async function configure(flags) {
   custom.resolver.resolverMainFields = ['react-native', 'browser', 'main'];
   custom.transformer.assetRegistryPath = path.join(reactNativePath, 'Libraries/Image/AssetRegistry');
 
-  const merged = mergeConfig(config, custom);
+  const merged = mergeConfig(config, custom, await exec('modify', 'metro.config'));
   debug('metro config', merged);
 
   return merged;

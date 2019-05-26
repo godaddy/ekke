@@ -8,9 +8,10 @@ const metro = require('../server');
  * @public
 */
 module.exports = async function run({ debug, ekke }, flags) {
-  const { ws } = await metro(flags);
+  const { exec } = ekke;
+  const { ws } = await metro(flags, exec);
 
-  ws.on('connection', (socket) => {
+  ws.on('connection', async (socket) => {
     const runner = flags.using;
     const opts = flags[runner] || {};
 
@@ -32,7 +33,6 @@ module.exports = async function run({ debug, ekke }, flags) {
       });
     }
 
-    send('run', { ...flags, opts });
     socket.on('message', (message) => {
       let event, payload;
 
@@ -71,5 +71,8 @@ module.exports = async function run({ debug, ekke }, flags) {
         } else if (!flags.watch) process.exit(0);
       }
     });
+
+    await send('run', { ...flags, opts });
+    await exec('modify', 'websocket', { send });
   });
 };

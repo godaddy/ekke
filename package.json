@@ -99,7 +99,7 @@
     "setup-env": "^1.2.2",
     "tap-spec": "^5.0.0",
     "tape": "^4.10.1",
-    "xhr2": "^0.1.4"
+    "xhr2": "^0.2.0"
   },
   "peerDependencies": {
     "react": "^16.8.6",

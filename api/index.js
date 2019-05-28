@@ -1,6 +1,8 @@
 const EventEmitter = require('eventemitter3');
 const diagnostics = require('diagnostics');
 const cli = require('argh').argv;
+const os = require('os');
+const path = require('path');
 
 /**
  * A basic API, and CLI interface for Ekke. The only difference between
@@ -117,10 +119,11 @@ Ekke.commands = {
  * @public
  */
 Ekke.defaults = {
-  'hostname': 'localhost',    // Hostname we should create our server upon
-  'port': 1975,               // The port number of the created server
-  'silent': true,             // Silence Metro bundler
-  'reset-cache': false        // The cache key poorly handled, so turn off by default.
+  'hostname': 'localhost',                                 // Hostname we should create our server upon
+  'port': 1975,                                            // The port number of the created server
+  'silent': true,                                          // Silence Metro bundler
+  'reset-cache': false,                                    // Turn off the Metro bundler cache
+  'cache-location': path.join(os.tmpdir(), 'ekke-cache')   // Metro bundler cacheStores location
 };
 
 //

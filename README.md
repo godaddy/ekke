@@ -382,7 +382,7 @@ You can use the following CLI flags to change the behavior of the command:
   alive.
   **Defaults to false.**
 - `--reset-cache` The Metro Bundler caching system is enabled by default so
-  that tests run in a performant way and don't alway rebuild. Using this
+  that tests run in a performant way and don't always rebuild. Using this
   flag will disable the cache.
   **Defaults to false.**
 - `--cache-location` We already made sure that the Metro Bundler cache of your

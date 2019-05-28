@@ -120,7 +120,7 @@ Ekke.defaults = {
   'hostname': 'localhost',    // Hostname we should create our server upon
   'port': 1975,               // The port number of the created server
   'silent': true,             // Silence Metro bundler
-  'reset-cache': true         // The cache key poorly handled, so turn off by default.
+  'reset-cache': false        // The cache key poorly handled, so turn off by default.
 };
 
 //

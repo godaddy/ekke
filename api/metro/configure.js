@@ -1,7 +1,9 @@
 const { mergeConfig, loadConfig } = require('metro-config');
+const { FileStore } = require('metro-cache');
 const resolve = require('metro-resolver').resolve;
 const diagnostics = require('diagnostics');
 const source = require('./source');
+const os = require('os');
 const path = require('path');
 
 //
@@ -18,12 +20,18 @@ const debug = diagnostics('ekke:configure');
  * @public
  */
 async function configure(flags) {
+  const cacheStoreLocation = flags['cache-location'] || path.join(os.tmpdir(), 'ekke-cache');
   const reactNativePath = path.dirname(require.resolve('react-native/package.json'));
   const config = await loadConfig();
   const custom = {
     resolver: {},
     serializer: {},
-    transformer: {}
+    transformer: {},
+    cacheStores: [
+      new FileStore({
+        root: cacheStoreLocation
+      })
+    ]
   };
 
   //

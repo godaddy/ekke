@@ -14,11 +14,11 @@ const debug = diagnostics('ekke:configure');
  * the tests.
  *
  * @param {Object} flags The configuration flags of the API/CLI.
- * @param {Function} exec Trigger events.
+ * @param {Ekke} ekke The Ekke instance.
  * @returns {Promise<Object>} configuration.
  * @public
  */
-async function configure(flags, exec) {
+async function configure(flags, ekke) {
   const reactNativePath = path.dirname(require.resolve('react-native/package.json'));
   const config = await loadConfig();
   const custom = {
@@ -35,7 +35,7 @@ async function configure(flags, exec) {
   //
   // See: https://github.com/facebook/react-native/issues/3099
   //
-  const fake = 'ekke-ekke-ekke-ekke';
+  const moduleName = 'ekke-ekke-ekke-ekke';
 
   //
   // Check if we're asked to nuke the cache, we should. This option will
@@ -74,7 +74,7 @@ async function configure(flags, exec) {
   // the use the JSON syntax of babel, so we can inject that to the
   // `process.env` which will be passed to the worker processes.
   //
-  const babel = await exec('modify', 'babel');
+  const babel = await ekke.exec('modify', 'babel');
 
   try {
     process.env.EKKE_BABEL = JSON.stringify(babel);
@@ -83,7 +83,7 @@ async function configure(flags, exec) {
   }
 
   custom.resolver.extraNodeModules = {
-    [fake]: process.cwd()
+    [moduleName]: process.cwd()
   };
 
   //
@@ -106,9 +106,10 @@ async function configure(flags, exec) {
   // that fit our theme.
   //
   const filePath = await source({
-    globs: [].concat(flags.require).concat(flags.argv),
-    runner: flags.using,
-    fake
+    requires: [].concat(flags.require),
+    globs: flags.argv,
+    using: flags.using,
+    moduleName
   });
 
   custom.resolver.resolveRequest = function resolveRequest(context, file, platform) {
@@ -166,7 +167,7 @@ async function configure(flags, exec) {
   custom.resolver.resolverMainFields = ['react-native', 'browser', 'main'];
   custom.transformer.assetRegistryPath = path.join(reactNativePath, 'Libraries/Image/AssetRegistry');
 
-  const merged = mergeConfig(config, custom, await exec('modify', 'metro.config'));
+  const merged = mergeConfig(config, custom, await ekke.exec('modify', 'metro.config'));
   debug('metro config', merged);
 
   return merged;

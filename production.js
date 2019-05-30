@@ -17,18 +17,34 @@ Ekke.prod = true;
 Ekke.dev = false;
 
 /**
- * Again, nothing but shell of it's former self.
+ * Create a function that will reject when used in production.
  *
- * @returns {Promise} This should never be used in production.
- * @public
+ * @param {String} name The name of the method that is disabled.
+ * @returns {Function} A function that will reject.
+ * @private
  */
-function render() {
-  return new Promise(function nope(resolve, reject) {
-    reject(new Error('render method is disabled in production'));
-  });
+function disable(name) {
+  /**
+   * Reject when called as functionality is disabled in prod.
+   *
+   * @returns {Promise} This should never be used in production.
+   * @public
+   */
+  function disabled() {
+    return new Promise(function nope(_resolve, reject) {
+      reject(new Error('The ' + name + ' method is disabled in production'));
+    });
+  }
+
+  disabled.displayName = name;
+  return disabled;
 }
 
+const render = disable('render');
+const use = disable('use');
+
 export {
+  render,
   Ekke,
-  render
+  use
 };

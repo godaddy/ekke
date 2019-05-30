@@ -19,10 +19,11 @@ const debug = diagnostics('ekke:runner');
  * @public
  */
 class Runner {
-  constructor({ screen, subway, config }) {
+  constructor({ screen, subway, config, plugin }) {
     this.eva = new Evaluator(subway);
     this.screen = screen;
     this.subway = subway;
+    this.plugin = plugin;
     this.config = config;
 
     this.cleanup = [];

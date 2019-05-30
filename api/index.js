@@ -1,7 +1,6 @@
 const EventEmitter = require('eventemitter3');
 const diagnostics = require('diagnostics');
-const { borked } = require('borked');
-const ms = require('millisecond');
+const shrubbery = require('shrubbery');
 const cli = require('argh').argv;
 
 //
@@ -24,10 +23,16 @@ class Ekke extends EventEmitter {
 
     const ekke = this;
 
+    this.registry = new Set();
     this.plugins = {
       modify: new Map(),      // Store our modifier functions.
       bridge: new Map()       // Store the bridge functions.
     };
+
+    this.shrubbery = shrubbery(this.plugins, {
+      context: ekke,
+      error: ekke.emit.bind(ekke, 'error')
+    });
 
     /**
      * Merge the options, with our defaults to create our API configuration.
@@ -113,6 +118,16 @@ class Ekke extends EventEmitter {
     this.on('info', args => console.info(...args));
     this.on('error', args => console.error(...args));
 
+    this.on('bridge', async ({ name, reply, data }, send) => {
+      const payload = await this.exec('bridge', name, data);
+
+      try {
+        await send(reply, payload);
+      } catch (e) {
+        debug(`failed to send reply(${reply}) over the bridge`, e);
+      }
+    });
+
     //
     // Generic event handling.
     //
@@ -125,62 +140,29 @@ class Ekke extends EventEmitter {
    * @param {String} name Name of the plugin map we should run on.
    * @param {String} method Name of the method we want to execute.
    * @param {Object} data Data the functions should receive.
+   * @returns {Mixed} What even was send as data.
    * @public
    */
-  async exec(name, method, data = {}, ...args) {
-    const map = this.plugins[name];
-    const methods = map.get(method);
-    let result = data;
-
-    if (!methods) return result;
-
-    for (let i = 0; i < methods.length; i++) {
-      const fn = methods[i].fn;
-      const name = fn.displayName || fn.name;
-      const timeout = ms(fn.timeout || '20 seconds');
-
-      try {
-        result = await borked(fn(result, ...args), timeout) || result;
-      } catch (e) {
-        debug(`failed to execute(${name})`, e);
-      }
-    }
-
-    return result;
+  exec() {
+    return this.shrubbery.exec(...arguments);
   }
 
   /**
    * Register a new plugin.
    *
-   * @param {String|Function} name The name of the plugin.
+   * @param {String} name The name of the plugin.
+   * @returns {Boolean} Indiction that the plugin was added or not.
    * @public
    */
   use(name) {
-    let plugin;
+    if (this.registry.has(name)) return false;
+    this.registry.add(name);
 
-    if (typeof name === 'function') plugin = name;
-    else plugin = require(name);
-
-    /**
-     * Assign a plugin in their correct Map() instance.
-     *
-     * @param {Map} map The map we should register our method in.
-     * @param {String} method Name of the event/method.
-     * @param {Function} fn Function to be invoked.
-     * @param {Object} options Plugin method configuration.
-     * @private
-     */
-    function assign(map, method, fn, { priority = 100 } = {}) {
-      const previous = map.get(method) || [];
-
-      map.set(method, previous.concat({ fn, priority }).sort(function sort(a, b) {
-        return b.priority - a.priority;
-      }));
-    }
+    const plugin = require(name);
 
     plugin({
-      modify: assign.bind(assign, this.plugins.modify),
-      bridge: assign.bind(assign, this.plugins.bridge),
+      modify: this.shrubbery.add.bind(this.shrubbery, 'modify'),
+      bridge: this.shrubbery.add.bind(this.shrubbery, 'bridge'),
 
       /**
        * Registers a new method on the API.

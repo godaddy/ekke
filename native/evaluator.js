@@ -135,7 +135,7 @@ class Evaluator {
   /**
    * Transform the received bundle.
    *
-   * @param {String} bundle
+   * @param {String} bundle The downloaded bundle.
    * @returns {Object} Source and Source Map.
    * @public
    */

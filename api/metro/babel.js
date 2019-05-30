@@ -95,7 +95,7 @@ function transform(transformOptions) {
 
     ...merge({
       presets: presets([], options),
-      plugins: plugins(transformOptions.plugins, options),
+      plugins: plugins(transformOptions.plugins, options)
     }, external)
   };
 

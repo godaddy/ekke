@@ -1,7 +1,8 @@
-import { render } from './native/bridge';
+import { render, use } from './native/bridge';
 import create from './components/ekke';
 import Subway from './native/subway';
 import Screen from './native/screen';
+import Plugin from './native/plugin';
 import Mocha from './runners/mocha';
 import Tape from './runners/tape';
 
@@ -29,15 +30,17 @@ const Ekke = create(async function mounted(rootTag, props = {}) {
     return props.NiPengNeeWom(...arguments);
   }
 
-  const screen = new Screen(rootTag);
   const subway = new Subway(props.hostname, props.port);
+  const screen = new Screen(rootTag);
+  const plugin = new Plugin(subway);
 
   subway.on('run', function run({ using = 'mocha', opts = {} }) {
     const Runner = props.Runner || RUNNERS[using];
     const runner = new Runner({
       config: { ...props, ...opts },
       subway,
-      screen
+      screen,
+      plugin
     });
   });
 
@@ -58,6 +61,7 @@ Ekke.dev = true;
 
 export {
   Ekke as default,
+  render,
   Ekke,
-  render
+  use
 };

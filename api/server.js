@@ -6,12 +6,12 @@ const Metro = require('metro');
  * Create our server infrastructure.
  *
  * @param {object} data Our API/CLI flags.
- * @param {Function} exec Trigger events.
+ * @param {Ekke} ekke Ekke instance
  * @returns {Promise<object>} WebSocket and metro bundler
  * @public
  */
-module.exports = async function metro(data, exec) {
-  const config = await configure(data, exec);
+module.exports = async function metro(data, ekke) {
+  const config = await configure(data, ekke);
 
   //
   // Metro inconsistencies:
@@ -41,6 +41,6 @@ module.exports = async function metro(data, exec) {
     server
   });
 
-  await exec('modify', 'metro.server', server);
+  await ekke.exec('modify', 'metro.server', server);
   return { ws, server };
 };

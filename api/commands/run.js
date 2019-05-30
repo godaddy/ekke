@@ -1,3 +1,4 @@
+const stringify = require('json-stringify-safe');
 const metro = require('../server');
 
 /**
@@ -8,8 +9,8 @@ const metro = require('../server');
  * @public
 */
 module.exports = async function run({ debug, ekke }, flags) {
+  const { ws } = await metro(flags, ekke);
   const { exec } = ekke;
-  const { ws } = await metro(flags, exec);
 
   ws.on('connection', async (socket) => {
     const runner = flags.using;
@@ -21,15 +22,24 @@ module.exports = async function run({ debug, ekke }, flags) {
      *
      * @param {String} event Name of the event.
      * @param {Object|Array} payload Data to transfer.
+     * @returns {Promise} Resolve when socket has written.
      * @public
      */
     function send(event, payload) {
       return new Promise(function sender(resolve, reject) {
-        socket.send(JSON.stringify({ event, payload }), function written(e) {
-          if (e) return reject(e);
+        let message;
 
-          resolve();
-        });
+        try { message = stringify({ event, payload }); } catch (e) { return reject(e); }
+
+        try {
+          socket.send(message, function written(e) {
+            if (e) return reject(e);
+
+            resolve();
+          });
+        } catch (e) {
+          reject(e);
+        }
       });
     }
 

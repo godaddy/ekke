@@ -1,9 +1,11 @@
+import bridge from './fixtures/bridge';
 import { describe, it } from 'mocha';
 import Ekke from '../../api';
 import assume from 'assume';
 import path from 'path';
 
-describe('(API) Plugins', function () {
+describe.only('(API) Plugins', function () {
+  const fixture = path.join(__dirname, 'fixtures');
   let ekke;
 
   beforeEach(function () {
@@ -16,7 +18,7 @@ describe('(API) Plugins', function () {
     });
 
     it('executes the plugin', function (next) {
-      function plugin(api) {
+      bridge.once('plugin', function plugin(api) {
         assume(api).is.a('object');
 
         assume(api).is.length(3);
@@ -25,9 +27,9 @@ describe('(API) Plugins', function () {
         assume(api.register).is.a('function');
 
         next();
-      }
+      });
 
-      ekke.use(plugin);
+      ekke.use(fixture);
     });
 
     describe('#register', function () {
@@ -36,13 +38,13 @@ describe('(API) Plugins', function () {
           next();
         }
 
-        function plugin({ register }) {
+        bridge.once('plugin', function plugin({ register }) {
           assume(ekke.foo).is.not.a('function');
           register('foo', foo);
           assume(ekke.foo).is.a('function');
-        }
+        });
 
-        ekke.use(plugin);
+        ekke.use(fixture);
         ekke.foo();
       });
 
@@ -58,14 +60,14 @@ describe('(API) Plugins', function () {
           next();
         }
 
-        function plugin({ register }) {
+        bridge.once('plugin', function plugin({ register }) {
           register('foo', foo);
 
           assume(ekke.foo).does.not.equal('foo');
           assume(ekke.foo.name).contains('foo');
-        }
+        });
 
-        ekke.use(plugin);
+        ekke.use(fixture);
         ekke.foo();
       });
     });
@@ -74,14 +76,14 @@ describe('(API) Plugins', function () {
       it('registers the supplied function', function () {
         function foo() {}
 
-        function plugin({ modify }) {
+        bridge.once('plugin', function plugin({ modify }) {
           modify('foo', foo);
-        }
+        });
 
         assume(ekke.plugins.modify).is.a('map');
         assume(ekke.plugins.modify).is.length(0);
 
-        ekke.use(plugin);
+        ekke.use(fixture);
 
         const modifiers = ekke.plugins.modify.get('foo');
 
@@ -100,8 +102,10 @@ describe('(API) Plugins', function () {
           modify('foo', foo);
         }
 
-        ekke.use(plugin);
-        ekke.use(plugin);
+        bridge.on('plugin', plugin);
+
+        ekke.use(fixture);
+        ekke.use(fixture);
 
         const modifiers = ekke.plugins.modify.get('foo');
 
@@ -115,6 +119,8 @@ describe('(API) Plugins', function () {
         assume(modifiers[1]).is.a('object');
         assume(modifiers[1].priority).equals(100);
         assume(modifiers[1].fn).equals(foo);
+
+        bridge.off('plugin', plugin);
       });
 
       it('sorts the plugins based on `priority`', function () {
@@ -122,21 +128,24 @@ describe('(API) Plugins', function () {
         function bar() {}
         function baz() {}
 
-        ekke.use(({ modify }) => {
+        bridge.once('plugin', ({ modify }) => {
           modify('foo', foo, {
             priority: 90
           });
         });
+        ekke.use(fixture);
 
-        ekke.use(({ modify }) => {
+        bridge.once('plugin', ({ modify }) => {
           modify('foo', bar, {
             priority: 120
           });
         });
+        ekke.use(fixture);
 
-        ekke.use(({ modify }) => {
+        bridge.once('plugin', ({ modify }) => {
           modify('foo', baz);
         });
+        ekke.use(fixture);
 
         const modifiers = ekke.plugins.modify.get('foo');
 

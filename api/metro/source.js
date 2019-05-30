@@ -13,12 +13,12 @@ const debug = diagnostics('ekke:source');
  * Generates source file that contains all the required imports.
  *
  * @param {String[]} [globs] The glob patterns that gather the files.
- * @param {String} fake Fake module name of the application root.
- * @param {String} runner The test runner that needs to be bundled.
+ * @param {String} moduleName Fake module name of the application root.
+ * @param {String} using The test runner that needs to be bundled.
  * @returns {Promise<string>} Location of our fake file.
  * @public
  */
-async function source({ globs = [], fake, runner = 'mocha' }) {
+async function source({ globs = [], moduleName, using = 'mocha' }) {
   const files = [];
 
   //
@@ -35,7 +35,7 @@ async function source({ globs = [], fake, runner = 'mocha' }) {
   // Map the require files to the fake package name we've created.
   //
   const requires = files
-    .map(file => path.join(fake, file))
+    .map(file => path.join(moduleName, file))
     .map(file => `require("${file}");`)
     .join('\n');
 
@@ -50,8 +50,8 @@ async function source({ globs = [], fake, runner = 'mocha' }) {
   const template = fs.readFileSync(path.join(__dirname, 'template.js'), 'utf-8');
   const content = template
     .replace('${requires}', requires)
-    .replace('${runner}', runner)
-    .replace('${browser}', runner === 'mocha')
+    .replace('${runner}', using)
+    .replace('${browser}', using === 'mocha')
     .replace('${__dirname}', process.cwd());
 
   debug('compiled template', content);

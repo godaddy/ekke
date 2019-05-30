@@ -3,11 +3,11 @@ const { paint, stripper } = require('es-paint');
 /**
  * Output the help information when users are exploring our CLI application.
  *
- * @param {Object} API Our command API.
+ * @param {Object} _API Our command API.
  * @param {Object} flags CLI flags.
  * @public
 */
-module.exports = async function help(API, flags) {
+module.exports = async function help(_API, flags) {
   const painter = flags.color === false ? stripper : paint;
   const { name, version } = require('../../package.json');
 

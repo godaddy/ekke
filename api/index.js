@@ -32,8 +32,10 @@ class Ekke extends EventEmitter {
     };
 
     this.shrubbery = shrubbery(this.plugins, {
-      context: ekke,
-      error: ekke.emit.bind(ekke, 'error')
+      error: function errorhandler(e) {
+        ekke.emit('error', e);
+      },
+      context: ekke
     });
 
     /**
@@ -115,10 +117,10 @@ class Ekke extends EventEmitter {
     //
     // Proxy the log events to the correct console.
     //
-    this.on('log', args => console.log(...args));
-    this.on('warn', args => console.warn(...args));
-    this.on('info', args => console.info(...args));
-    this.on('error', args => console.error(...args));
+    this.on('console.log', args => console.log(...args));
+    this.on('console.warn', args => console.warn(...args));
+    this.on('console.info', args => console.info(...args));
+    this.on('console.error', args => console.error(...args));
 
     this.on('bridge', async ({ name, reply, data }, send) => {
       const payload = await this.exec('bridge', name, data);
@@ -157,8 +159,9 @@ class Ekke extends EventEmitter {
    * @public
    */
   use(name) {
-    if (this.registry.has(name)) return false;
-    this.registry.add(name);
+    if (!this.registry.has(name)) {
+      this.registry.add(name);
+    }
 
     const plugin = require(name);
 

@@ -4,7 +4,7 @@ import Ekke from '../../api';
 import assume from 'assume';
 import path from 'path';
 
-describe.only('(API) Plugins', function () {
+describe('(API) Plugins', function () {
   const fixture = path.join(__dirname, 'fixtures');
   let ekke;
 
@@ -103,9 +103,9 @@ describe.only('(API) Plugins', function () {
         }
 
         bridge.on('plugin', plugin);
-
         ekke.use(fixture);
         ekke.use(fixture);
+        bridge.off('plugin', plugin);
 
         const modifiers = ekke.plugins.modify.get('foo');
 
@@ -119,8 +119,6 @@ describe.only('(API) Plugins', function () {
         assume(modifiers[1]).is.a('object');
         assume(modifiers[1].priority).equals(100);
         assume(modifiers[1].fn).equals(foo);
-
-        bridge.off('plugin', plugin);
       });
 
       it('sorts the plugins based on `priority`', function () {
@@ -170,14 +168,14 @@ describe.only('(API) Plugins', function () {
       it('registers the supplied function', function () {
         function foo() {}
 
-        function plugin({ bridge }) {
+        bridge.once('plugin', function plugin({ bridge }) {
           bridge('foo', foo);
-        }
+        });
 
         assume(ekke.plugins.bridge).is.a('map');
         assume(ekke.plugins.bridge).is.length(0);
 
-        ekke.use(plugin);
+        ekke.use(fixture);
 
         const bridges = ekke.plugins.bridge.get('foo');
 
@@ -196,8 +194,10 @@ describe.only('(API) Plugins', function () {
           bridge('foo', foo);
         }
 
-        ekke.use(plugin);
-        ekke.use(plugin);
+        bridge.on('plugin', plugin);
+        ekke.use(fixture);
+        ekke.use(fixture);
+        bridge.off('plugin', plugin);
 
         const bridges = ekke.plugins.bridge.get('foo');
 
@@ -218,21 +218,24 @@ describe.only('(API) Plugins', function () {
         function bar() {}
         function baz() {}
 
-        ekke.use(({ bridge }) => {
+        bridge.once('plugin', ({ bridge }) => {
           bridge('foo', foo, {
             priority: 90
           });
         });
+        ekke.use(fixture);
 
-        ekke.use(({ bridge }) => {
+        bridge.once('plugin', ({ bridge }) => {
           bridge('foo', bar, {
             priority: 120
           });
         });
+        ekke.use(fixture);
 
-        ekke.use(({ bridge }) => {
+        bridge.once('plugin', ({ bridge }) => {
           bridge('foo', baz);
         });
+        ekke.use(fixture);
 
         const bridges = ekke.plugins.bridge.get('foo');
 
@@ -258,7 +261,7 @@ describe.only('(API) Plugins', function () {
     it('executes functions in our given plugin map', async function () {
       const done = assume.plan(6);
 
-      ekke.use(({ modify }) => {
+      bridge.once('plugin', ({ modify }) => {
         modify('example', async function example(data) {
           assume(data).is.a('object');
 
@@ -268,6 +271,8 @@ describe.only('(API) Plugins', function () {
           return data;
         });
       });
+
+      ekke.use(fixture);
 
       const result = await ekke.exec('modify', 'example', {
         foo: 'bar'
@@ -285,21 +290,25 @@ describe.only('(API) Plugins', function () {
     });
 
     it('receives the additional args', async function () {
-      ekke.use(({ modify }) => {
+      bridge.once('plugin', ({ modify }) => {
         modify('example', async function example(data, ...args) {
           assume(data).is.a('object');
 
           assume(data).is.length(1);
           assume(data.foo).equals('bar');
 
-          assume(args).is.length(3);
+          assume(args).is.length(4);
           assume(args[0]).equals('another');
           assume(args[1]).equals('arg');
           assume(args[2]).equals('lol');
 
+          assume(args[3]).deep.equals({});
+
           return data;
         });
       });
+
+      ekke.use(fixture);
 
       const result = await ekke.exec('modify', 'example', {
         foo: 'bar'
@@ -309,7 +318,7 @@ describe.only('(API) Plugins', function () {
     it('executes the methods in order', async function () {
       const results = [];
 
-      ekke.use(({ modify }) => {
+      bridge.once('plugin', ({ modify }) => {
         modify('example', async function example() {
           results.push('last');
         }, { priority: 95 });
@@ -323,6 +332,8 @@ describe.only('(API) Plugins', function () {
         });
       });
 
+      ekke.use(fixture);
+
       const data = await ekke.exec('modify', 'example', {
         foo: 'bar'
       });
@@ -334,7 +345,7 @@ describe.only('(API) Plugins', function () {
     it('executed function can change the result', async function () {
       const done = assume.plan(3);
 
-      ekke.use(({ modify }) => {
+      bridge.once('plugin', ({ modify }) => {
         modify('example', async function example(data) {
           assume(data).deep.equals({ send: 'help' });
         }, { priority: 95 });
@@ -353,6 +364,8 @@ describe.only('(API) Plugins', function () {
         });
       });
 
+      ekke.use(fixture);
+
       const data = await ekke.exec('modify', 'example', {
         foo: 'bar'
       });
@@ -362,17 +375,37 @@ describe.only('(API) Plugins', function () {
     });
 
     it('fails silently so a plugin can not break our core', async function () {
-      ekke.use(({ modify }) => {
-        modify('example', async function example(data) {
+      bridge.once('plugin', ({ modify }) => {
+        modify('example', async function example() {
           throw new Error('I should not be causing any harm');
         });
       });
+
+      ekke.use(fixture);
 
       const data = await ekke.exec('modify', 'example', {
         foo: 'bar'
       });
 
       assume(data).deep.equals({ foo: 'bar' });
+    });
+
+    it('redirectst the thrown error to our `error` event', function (next) {
+      bridge.once('plugin', ({ modify }) => {
+        modify('example', async function example() {
+          throw new Error('I should not be causing any harm');
+        });
+      });
+
+      ekke.once('error', function (e) {
+        assume(e).is.a('error');
+        assume(e.message).equals('I should not be causing any harm');
+
+        next();
+      });
+
+      ekke.use(fixture);
+      ekke.exec('modify', 'example');
     });
   });
 });

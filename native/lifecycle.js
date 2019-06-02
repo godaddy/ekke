@@ -14,7 +14,7 @@ async function before({ send }) {
 
   ocm.forEach(function each(method) {
     oc[method] = console[method];
-    console[method] = send.bind(send, method);
+    console[method] = send.bind(send, `console.${method}`);
   });
 
   return once(async function after() {

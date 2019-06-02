@@ -20,10 +20,10 @@ describe('(native) lifecycle', function () {
 
   it('intercepts console[info|warn|log|error]', async function () {
     const asserts = [
-      { method: 'warn', payload: ['what', 'is', 'up'] },
-      { method: 'log', payload: ['im just loggin', { data: 'here' }] },
-      { method: 'error', payload: ['error here'] },
-      { method: 'info', payload: ['works as intended'] }
+      { method: 'console.warn', payload: ['what', 'is', 'up'] },
+      { method: 'console.log', payload: ['im just loggin', { data: 'here' }] },
+      { method: 'console.error', payload: ['error here'] },
+      { method: 'console.info', payload: ['works as intended'] }
     ];
 
     const send = (method, ...payload) => {

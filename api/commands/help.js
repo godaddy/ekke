@@ -24,8 +24,9 @@ ${'run'}|>#00A63F      Run the given glob of test files.
          ${'--watch'}|>dimgray          Don't exit when the tests complete but keep listening.
          ${'--no-silent'}|>dimgray      Do not suppress the output of Metro.
          ${'--require'}|>dimgray        Require module (before tests are executed).
-         ${'--no-reset-cache'}|>dimgray Do not clear the Metro cache.
-${'help'}|>#00A63F     Displays this help message.
+         ${'--reset-cache'}|>dimgray    Clear the Metro cache.
+         ${'--cache-location'}|>dimgray Change the Metro cache location.
+${'help'}|>#00A63F             Displays this help message.
          ${'--no-color'}|>dimgray       Disable colors in help message.
 
 EXAMPLES:

@@ -381,10 +381,14 @@ You can use the following CLI flags to change the behavior of the command:
   the process to exit, you can use the `--watch` flag to keep the CLI process
   alive.
   **Defaults to false.**
-- `--no-reset-cache` The Metro Bundler caching system is disabled by default so
-  your tests, and require statements are always freshly compiled. Using this
-  flag will re-enable the cache.
+- `--reset-cache` The Metro Bundler caching system is enabled by default so
+  that tests run in a performant way and don't always rebuild. Using this
+  flag will disable the cache.
   **Defaults to false.**
+- `--cache-location` We already made sure that the Metro Bundler cache of your
+  test doesn't collide with your test cache, but if you like to store it
+  somewhere else you can change it with this flag.
+  **Defaults to `os.tempdir()/ekke-cache`.**
 - `--no-silent` We silence the output of the Metro bundler by default, this
   allows you to see the Metro bundler output again.
   **Defaults to false.**
@@ -415,7 +419,7 @@ command:
 
 ```
 
-ekke (v0.0.0)
+ekke (v1.0.2)
 Ekke-Ekke-Ekke-Ekke-PTANG. Zoo-Boing. Z' nourrwringmm...
 
 COMMANDS:
@@ -427,8 +431,9 @@ run      Run the given glob of test files.
          --watch          Don't exit when the tests complete but keep listening.
          --no-silent      Do not suppress the output of Metro.
          --require        Require module (before tests are executed).
-         --no-reset-cache Do not clear the Metro cache.
-help     Displays this help message.
+         --reset-cache    Clear the Metro cache.
+         --cache-location Change the Metro cache location.
+help             Displays this help message.
          --no-color       Disable colors in help message.
 
 EXAMPLES:

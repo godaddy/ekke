@@ -36,6 +36,7 @@ async function source({ globs = [], moduleName, using = 'mocha' }) {
   //
   const requires = files
     .map(file => path.join(moduleName, file))
+    .map(file => file.replace(/\\/g, '\\\\'))
     .map(file => `require("${file}");`)
     .join('\n');
 

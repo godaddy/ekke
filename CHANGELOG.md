@@ -1,5 +1,12 @@
 # CHANGELOG
 
+### 1.1.0
+
+- [#20] Support Windows Paths
+- [#19] Use a custom path for the Metro cache, this change also enables the
+  cache by default again. So if you want to kill the cache specifically for
+  you tests you need to use the `--reset-cache` flag for that.
+
 ### 1.0.2
 
 - [#3] Add missing repository field in package.json

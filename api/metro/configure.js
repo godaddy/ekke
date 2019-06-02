@@ -1,4 +1,5 @@
 const { mergeConfig, loadConfig } = require('metro-config');
+const { FileStore } = require('metro-cache');
 const resolve = require('metro-resolver').resolve;
 const diagnostics = require('diagnostics');
 const source = require('./source');
@@ -24,7 +25,12 @@ async function configure(flags, ekke) {
   const custom = {
     resolver: {},
     serializer: {},
-    transformer: {}
+    transformer: {},
+    cacheStores: [
+      new FileStore({
+        root: flags['cache-location']
+      })
+    ]
   };
 
   //

@@ -1,6 +1,6 @@
 {
   "name": "ekke",
-  "version": "1.0.2",
+  "version": "1.1.0",
   "description": "Ekke is a test runner that allows you to execute your tests on the actual device",
   "main": "api/index.js",
   "react-native": "ekke.js",
@@ -101,7 +101,7 @@
     "setup-env": "^1.2.2",
     "tap-spec": "^5.0.0",
     "tape": "^4.10.1",
-    "xhr2": "^0.1.4"
+    "xhr2": "^0.2.0"
   },
   "peerDependencies": {
     "react": "^16.8.6",

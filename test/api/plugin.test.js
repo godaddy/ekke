@@ -21,7 +21,8 @@ describe('(API) Plugins', function () {
       bridge.once('plugin', function plugin(api) {
         assume(api).is.a('object');
 
-        assume(api).is.length(3);
+        assume(api).is.length(4);
+        assume(api.set).is.a('function');
         assume(api.modify).is.a('function');
         assume(api.bridge).is.a('function');
         assume(api.register).is.a('function');
@@ -33,14 +34,36 @@ describe('(API) Plugins', function () {
     });
 
     describe('#register', function () {
+      it('registers the module in the plugin registry', function () {
+        bridge.once('plugin', function plugin({ register }) {
+          register();
+
+          assume(ekke.registry.has(fixture)).is.true();
+        });
+
+        ekke.use(fixture);
+      });
+
+      it('registers a custom plugin', function () {
+        bridge.once('plugin', function plugin({ register }) {
+          register('foobar');
+
+          assume(ekke.registry.has('foobar')).is.true();
+        });
+
+        ekke.use(fixture);
+      });
+    });
+
+    describe('#use', function () {
       it('introduces a new function on the API', function (next) {
         function foo() {
           next();
         }
 
-        bridge.once('plugin', function plugin({ register }) {
+        bridge.once('plugin', function plugin({ set }) {
           assume(ekke.foo).is.not.a('function');
-          register('foo', foo);
+          set('foo', foo);
           assume(ekke.foo).is.a('function');
         });
 
@@ -60,8 +83,8 @@ describe('(API) Plugins', function () {
           next();
         }
 
-        bridge.once('plugin', function plugin({ register }) {
-          register('foo', foo);
+        bridge.once('plugin', function plugin({ set }) {
+          set('foo', foo);
 
           assume(ekke.foo).does.not.equal('foo');
           assume(ekke.foo.name).contains('foo');

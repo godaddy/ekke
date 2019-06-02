@@ -64,8 +64,10 @@ class Runner {
     const complete = this.complete();
     const local = this.eva.local();
 
-    let suites;
-    let runner;
+    let requires;
+    let library;
+    let plugins;
+    let globs;
     let scope;
 
     //
@@ -104,17 +106,43 @@ class Runner {
     //
     try {
       scope = await this.eva.exec(sandbox);
-      ({ runner, suites } = scope.metroRequire(1));
+      ({
+        requires,
+        library,
+        plugins,
+        globs,
+      } = scope.metroRequire(1));
     } catch (e) {
       debug('critical error: the compilation failed', e);
       return complete(e);
     }
 
     //
-    // Prep the runner, so it can create a new instance if needed.
+    // Prep the library, so it can create a new instance if needed.
     //
     try {
-      this.cleanup.push(await this.before(this.config, runner));
+      this.cleanup.push(await this.before(this.config, library));
+    } catch (e) {
+      return complete(e);
+    }
+
+    //
+    // Requires should run before our test suites so they can prepare
+    // environments if needed.
+    //
+    try {
+      requires();
+    } catch (e) {
+      return complete(e);
+    }
+
+    try {
+      const results = plugins();
+
+      Object.keys(results).forEach((key) => {
+        debug(`registering plugin($key)`);
+        this.plugin.use(results[key]);
+      });
     } catch (e) {
       return complete(e);
     }
@@ -124,7 +152,7 @@ class Runner {
     // environment.
     //
     try {
-      suites();
+      globs();
     } catch (e) {
       return complete(e);
     }
@@ -151,7 +179,8 @@ class Runner {
 
     this.cleanup.length = 0;
     this.screen.restore();
-    this.runner = null;
+    this.plugin.reset();
+    this.library = null;
   }
 }
 

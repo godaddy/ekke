@@ -113,8 +113,9 @@ async function configure(flags, ekke) {
   //
   const filePath = await source({
     requires: [].concat(flags.require),
-    globs: flags.argv,
+    plugins: Array.from(ekke.registry),
     using: flags.using,
+    globs: flags.argv,
     moduleName
   });
 

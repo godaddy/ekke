@@ -1,9 +1,8 @@
 const EventEmitter = require('eventemitter3');
 const diagnostics = require('diagnostics');
 const shrubbery = require('shrubbery');
-const cli = require('argh').argv;
-const os = require('os');
 const path = require('path');
+const os = require('os');
 
 //
 // Create a debugger.
@@ -16,11 +15,11 @@ const debug = diagnostics('ekke:api');
  * the constructor, and call our API methods.
  *
  * @constructor
- * @param {Object} [options] Parsed CLI arguments, or options object.
+ * @param {Object} options Parsed CLI arguments, or options object.
  * @public
  */
 class Ekke extends EventEmitter {
-  constructor(options = cli) {
+  constructor(options = {}) {
     super();
 
     const ekke = this;
@@ -136,6 +135,20 @@ class Ekke extends EventEmitter {
     // Generic event handling.
     //
     this.on('ping', (args, send) => send('pong', args));
+
+    //
+    // Finally, when we've initialized all our internals we can process some
+    // additional CLI flags that could affect our behavior.
+    //
+    const config = this.config();
+    if (!config.plugin) return;
+
+    //
+    // The plugin variable can either be a string, or an array of strings. By
+    // using concat we will either flatten them in the array, or abuse the
+    // method as push and push in a single item.
+    //
+    [].concat(config.plugin).forEach((plugin) => this.use(plugin));
   }
 
   /**
@@ -159,10 +172,6 @@ class Ekke extends EventEmitter {
    * @public
    */
   use(name) {
-    if (!this.registry.has(name)) {
-      this.registry.add(name);
-    }
-
     const plugin = require(name);
 
     plugin({
@@ -170,13 +179,26 @@ class Ekke extends EventEmitter {
       bridge: this.shrubbery.add.bind(this.shrubbery, 'bridge'),
 
       /**
-       * Registers a new method on the API.
+       * Register a new file or module that needs to be loaded and executed
+       * as plugin on React-Native.
+       *
+       * @param {String} file Name or path the file/module.
+       * @public
+       */
+      register: (file = name) => {
+        if (!this.registry.has(file)) {
+          this.registry.add(file);
+        }
+      },
+
+      /**
+       * Set a new method on the API.
        *
        * @param {String} method Name of the API method we want to register.
        * @param {Function} fn Function to assign as method.
        * @public
        */
-      register: (method, fn) => {
+      set: (method, fn) => {
         if (method in this) debug(`plugin is overriding existing method ${method}`);
 
         this[method] = fn.bind(this, {
@@ -206,6 +228,7 @@ Ekke.commands = {
  * @public
  */
 Ekke.defaults = {
+  'using': 'mocha',                                        // Default test runner.
   'hostname': 'localhost',                                 // Hostname we should create our server upon
   'port': 1975,                                            // The port number of the created server
   'silent': true,                                          // Silence Metro bundler

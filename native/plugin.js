@@ -146,7 +146,7 @@ class Plugin extends EventEmitter {
        * @param {Function} plugin Function to be executed.
        * @public
        */
-      register: (name, plugin) => {
+      set: (name, plugin) => {
         if (this.registry.has(name)) {
           debug(`about to override an existing plugin method(${name})`);
         }

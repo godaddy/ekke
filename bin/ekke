@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
+const options = require('argh').argv;
 const Ekke = require('../api');
-const ekke = new Ekke();
+const ekke = new Ekke(options);
 
 ekke.ekke.ekke.ekke.PTANGZooBoingZnourrwringmm();

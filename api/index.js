@@ -98,18 +98,13 @@ class Ekke extends EventEmitter {
     // Introduce our commands to the prototype.
     //
     Object.entries(Ekke.commands).forEach(([method, fn]) => {
-      if (method in this) debug(`overriding existing method(${method})`);
-
-      this[method] = fn.bind(this, {
-        debug: diagnostics(`ekke:${method}`),
-        ekke: this
-      });
+      this.define(method, fn);
     });
 
     //
     // Pre-bind our utility functions.
     //
-    ['use', 'exec'].forEach(method => {
+    ['use', 'exec', 'define'].forEach(method => {
       this[method] = this[method].bind(this);
     });
 
@@ -152,6 +147,28 @@ class Ekke extends EventEmitter {
   }
 
   /**
+   * Defines a new API method or command that can be executed.
+   *
+   * @param {String} method The name of the method it should be introduced as.
+   * @param {Function} fn Function to execute.
+   * @public
+   */
+  define(method, fn) {
+    if (method in this) debug(`plugin is overriding existing method ${method}`);
+
+    const bound = fn.bind(this, {
+      debug: diagnostics(`ekke:${method}`),
+      ekke: this
+    });
+
+    Object.keys(fn).forEach(function assignProp(key) {
+      bound[key] = fn[key];
+    });
+
+    this[method] = bound;
+  }
+
+  /**
    * Execute all assigned functions for the given map & method.
    *
    * @param {String} name Name of the plugin map we should run on.
@@ -177,6 +194,7 @@ class Ekke extends EventEmitter {
     plugin({
       modify: this.shrubbery.add.bind(this.shrubbery, 'modify'),
       bridge: this.shrubbery.add.bind(this.shrubbery, 'bridge'),
+      define: this.define,
 
       /**
        * Register a new file or module that needs to be loaded and executed
@@ -189,22 +207,6 @@ class Ekke extends EventEmitter {
         if (!this.registry.has(file)) {
           this.registry.add(file);
         }
-      },
-
-      /**
-       * Set a new method on the API.
-       *
-       * @param {String} method Name of the API method we want to register.
-       * @param {Function} fn Function to assign as method.
-       * @public
-       */
-      set: (method, fn) => {
-        if (method in this) debug(`plugin is overriding existing method ${method}`);
-
-        this[method] = fn.bind(this, {
-          debug: diagnostics(`ekke:${method}`),
-          ekke: this
-        });
       }
     });
   }

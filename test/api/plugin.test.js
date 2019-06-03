@@ -22,10 +22,10 @@ describe('(API) Plugins', function () {
         assume(api).is.a('object');
 
         assume(api).is.length(4);
-        assume(api.set).is.a('function');
+        assume(api.register).is.a('function');
         assume(api.modify).is.a('function');
         assume(api.bridge).is.a('function');
-        assume(api.register).is.a('function');
+        assume(api.define).is.a('function');
 
         next();
       });
@@ -55,15 +55,15 @@ describe('(API) Plugins', function () {
       });
     });
 
-    describe('#use', function () {
+    describe('#define', function () {
       it('introduces a new function on the API', function (next) {
         function foo() {
           next();
         }
 
-        bridge.once('plugin', function plugin({ set }) {
+        bridge.once('plugin', function plugin({ define }) {
           assume(ekke.foo).is.not.a('function');
-          set('foo', foo);
+          define('foo', foo);
           assume(ekke.foo).is.a('function');
         });
 
@@ -83,8 +83,8 @@ describe('(API) Plugins', function () {
           next();
         }
 
-        bridge.once('plugin', function plugin({ set }) {
-          set('foo', foo);
+        bridge.once('plugin', function plugin({ define }) {
+          define('foo', foo);
 
           assume(ekke.foo).does.not.equal('foo');
           assume(ekke.foo.name).contains('foo');

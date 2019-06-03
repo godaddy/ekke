@@ -33,19 +33,19 @@ describe('(ekke) Plugin', function () {
         assume(api.bridge).is.a('function');
         assume(api.bridge).equals(plug.bridge);
 
-        assume(api.register).is.a('function');
+        assume(api.define).is.a('function');
         assume(api.destroy).is.a('function');
 
         next();
       });
     });
 
-    describe('#register', function () {
+    describe('#define', function () {
       it('registers a new function', function () {
         function example() {};
 
-        plug.use(function ({ register }) {
-          register('example', example);
+        plug.use(function ({ define }) {
+          define('example', example);
         });
 
         assume(plug.registry.has('example')).is.true();

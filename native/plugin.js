@@ -34,7 +34,7 @@ class Plugin extends EventEmitter {
       context: this
     });
 
-    ['bridge', 'modify', 'transfer'].forEach((method) => {
+    ['bridge', 'modify', 'transfer', 'define'].forEach((method) => {
       this[method] = this[method].bind(this);
     });
 
@@ -129,6 +129,21 @@ class Plugin extends EventEmitter {
   }
 
   /**
+  * Registers a new function that can be used by developers.
+  *
+  * @param {String} method The name of the function.
+  * @param {Function} fn Function to be executed.
+  * @public
+  */
+  define(method, fn) {
+    if (this.registry.has(method)) {
+      debug(`about to override an existing plugin method(${method})`);
+    }
+
+    this.registry.set(method, fn);
+  }
+
+  /**
    * Register a new plugin.
    *
    * @param {Function} fn The plugin that needs to be executed.
@@ -138,21 +153,7 @@ class Plugin extends EventEmitter {
     fn({
       modify: this.modify,
       bridge: this.bridge,
-
-      /**
-       * Registers a new function that can be used by developers.
-       *
-       * @param {String} name The name of the function.
-       * @param {Function} plugin Function to be executed.
-       * @public
-       */
-      set: (name, plugin) => {
-        if (this.registry.has(name)) {
-          debug(`about to override an existing plugin method(${name})`);
-        }
-
-        this.registry.set(name, plugin);
-      },
+      define: this.define,
 
       /**
        * Function to be executed when the plugin is removed/destroyed.

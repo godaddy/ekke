@@ -1,5 +1,6 @@
 const stringify = require('json-stringify-safe');
 const metro = require('../server');
+const define = require('./define');
 
 /**
  * Start our servers.
@@ -8,7 +9,7 @@ const metro = require('../server');
  * @param {Object} flags CLI flags.
  * @public
 */
-module.exports = async function run({ debug, ekke }, flags) {
+async function run({ debug, ekke }, flags) {
   const { ws } = await metro(flags, ekke);
   const { exec } = ekke;
 
@@ -29,7 +30,11 @@ module.exports = async function run({ debug, ekke }, flags) {
       return new Promise(function sender(resolve, reject) {
         let message;
 
-        try { message = stringify({ event, payload }); } catch (e) { return reject(e); }
+        try {
+          message = stringify({ event, payload });
+        } catch (e) {
+          return reject(e);
+        }
 
         try {
           socket.send(message, function written(e) {
@@ -85,4 +90,33 @@ module.exports = async function run({ debug, ekke }, flags) {
     await send('run', { ...flags, opts });
     await exec('modify', 'websocket', { send });
   });
-};
+}
+
+//
+// Expose the interface.
+//
+module.exports = define(run, {
+  //
+  // Detailed explanation of what this command does, and achieves.
+  //
+  description: 'Run the given the given glob of test files for the specified runner.',
+
+  //
+  // Different API examples to aid the user.
+  //
+  examples: 'ekke run ./test/*.test.js --using mocha',
+
+  //
+  // The flags, options, that can be configured for this command.
+  //
+  flags: {
+    '--port': 'Port number that Metro Bundler should use.',
+    '--hostname': 'Hostname that Metro Bundler should use.',
+    '--using': 'Name of the test runner to use.',
+    '--watch': 'Don\'t exit when the tests complete but keep listening.',
+    '--no-silent': 'Do not suppress the output of Metro.',
+    '--require': 'Require module (before tests are executed).',
+    '--reset-cache': 'Clear the Metro cache. Useful when requires are suddently not found.',
+    '--cache-location': 'Change the Metro cache location.'
+  }
+});

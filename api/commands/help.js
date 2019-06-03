@@ -1,36 +1,55 @@
-const { paint, stripper } = require('es-paint');
+const define = require('./define');
+const halp = require('send-help');
 
 /**
  * Output the help information when users are exploring our CLI application.
  *
- * @param {Object} _API Our command API.
+ * @param {Object} _ Our command API.
  * @param {Object} flags CLI flags.
  * @public
 */
-module.exports = async function help(_API, flags) {
-  const painter = flags.color === false ? stripper : paint;
-  const { name, version } = require('../../package.json');
+async function help({ ekke }, flags) {
+  const { name, version, description } = require('../../package.json');
+  const specific = Array.isArray(flags.argv) && flags.argv[0];
 
-  console.log(painter`
-${name} (v${version}|>#00A63F)
-${"Ekke-Ekke-Ekke-Ekke-PTANG. Zoo-Boing. Z' nourrwringmm..."}|>#00A63F
+  const output = halp(Object.keys(ekke).filter(function filter(name) {
+    const command = ekke[name];
+    return typeof command === 'function' && command.ekke === 'ekke-ekke-ekke';
+  }).reduce(function reduce(memo, name) {
+    memo[name] = ekke[name];
+    return memo;
+  }, {}), {
+    name,
+    flags,
+    version,
+    specific,
+    description,
+    accent: '#00A63F',
+    subtle: 'dimgray',
+    color: flags.color,
+  });
 
-COMMANDS:
+  console.log('\n' + output.trim() + '\n');
+}
 
-${'run'}|>#00A63F      Run the given glob of test files.
-         ${'--port'}|>dimgray           Port number that Metro Bundler should use.
-         ${'--hostname'}|>dimgray       Hostname that Metro Bundler should use.
-         ${'--using'}|>dimgray          Name of the test runner to use.
-         ${'--watch'}|>dimgray          Don't exit when the tests complete but keep listening.
-         ${'--no-silent'}|>dimgray      Do not suppress the output of Metro.
-         ${'--require'}|>dimgray        Require module (before tests are executed).
-         ${'--reset-cache'}|>dimgray    Clear the Metro cache.
-         ${'--cache-location'}|>dimgray Change the Metro cache location.
-${'help'}|>#00A63F             Displays this help message.
-         ${'--no-color'}|>dimgray       Disable colors in help message.
+//
+// Expose the interface.
+//
+module.exports = define(help, {
+//
+  // Detailed explanation of what this command does, and achieves.
+  //
+  description: 'Displays this help message.',
 
-EXAMPLES:
+  //
+  // Different API examples to aid the user.
+  //
+  examples: 'ekke help',
 
-$ ${'ekke run ./test/*.test.js'}|>dimgray --using mocha
-`);
-};
+  //
+  // The flags, options, that can be configured for this command.
+  //
+  flags: {
+    '--no-color': 'Disable colors in help message.'
+  }
+});

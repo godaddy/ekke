@@ -116,7 +116,10 @@ module.exports = define(run, {
     '--watch': 'Don\'t exit when the tests complete but keep listening.',
     '--no-silent': 'Do not suppress the output of Metro.',
     '--require': 'Require module (before tests are executed).',
-    '--reset-cache': 'Clear the Metro cache. Useful when requires are suddently not found.',
+    '--reset-cache': [
+      'Clear the Metro cache.',
+      'When the Metro bundler babel transform cache.'
+    ],
     '--cache-location': 'Change the Metro cache location.'
   }
 });

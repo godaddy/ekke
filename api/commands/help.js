@@ -9,7 +9,6 @@ const halp = require('send-help');
  * @public
 */
 async function help({ ekke }, flags) {
-  const { name, version, description } = require('../../package.json');
   const specific = Array.isArray(flags.argv) && flags.argv[0];
 
   const output = halp(Object.keys(ekke).filter(function filter(name) {
@@ -19,14 +18,13 @@ async function help({ ekke }, flags) {
     memo[name] = ekke[name];
     return memo;
   }, {}), {
-    name,
     flags,
-    version,
     specific,
-    description,
     accent: '#00A63F',
     subtle: 'dimgray',
     color: flags.color,
+    verbose: flags.verbose,
+    ...require('../../package.json')
   });
 
   console.log('\n' + output.trim() + '\n');
@@ -50,6 +48,7 @@ module.exports = define(help, {
   // The flags, options, that can be configured for this command.
   //
   flags: {
-    '--no-color': 'Disable colors in help message.'
+    '--no-color': 'Disable colors in help message.',
+    '--verbose': 'Include more detailed information in the help output.'
   }
 });

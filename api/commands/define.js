@@ -27,7 +27,7 @@ function define(command, details = {}) {
    */
   function sentences(desc = '') {
     return !Array.isArray(desc)
-    ? desc.split(/(?<!\w\.\w.)(?<![A-Z][a-z]\.)(?<=\.|\?)\s/)
+    ? desc.split(/(?<!\w\.\w.)(?<![A-Z][a-z]\.)(?<=\.|\?|\!)\s/)
     : desc;
   }
 

@@ -28,7 +28,7 @@ class Plugin extends EventEmitter {
     this.subway = subway;
 
     this.shrubbery = shrubbery({
-      modifiers: this.modifiers
+      modifiy: this.modifiers
     }, {
       error: this.emit.bind(this, 'error'),
       context: this

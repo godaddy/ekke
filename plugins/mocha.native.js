@@ -1,28 +1,22 @@
-import Runner from './';
+import Mocha from 'mocha';
 
 /**
- * Prepare the environment for the Mocha test runner.
+ * Create a Mocha test runner.
  *
- * @constructor
+ * @param {Object} API The plugin API.
  * @public
  */
-class MochaRunner extends Runner {
-  /**
-   * Setup our test runner, pre-pare for test import, and execution.
-   *
-   * @param {Object} config The configuration of all the things.
-   * @param {Function} Mocha The test runner.
-   * @returns {Undefined|Function} After clean up function.
-   * @public
-   */
-  async before(config, Mocha) {
+export default function plugin({ modify }) {
+  let mocha;
+
+  modify('before', async function ({ config }) {
     const fgrep = config.fgrep || '';
     const grep = config.grep || '';
 
-    const mocha = (this.runner = new Mocha({
+    const mocha = new Mocha({
       grep: grep.length && grep,
       fgrep: fgrep.length && fgrep
-    }));
+    });
 
     //
     // Apply all options that were given to us through the bundler process.
@@ -44,20 +38,9 @@ class MochaRunner extends Runner {
     // way when the tests are loaded they can actually access `describe` & `it`.
     //
     mocha.suite.emit('pre-require', global, '', mocha);
-  }
+  });
 
-  /**
-   * Execute the test runner.
-   *
-   * @param {Function} completion Callback for when we're done.
-   * @public
-   */
-  async run(completion) {
-    this.runner.run(completion);
-  }
+  modify('run', async function ({ done }) {
+    mocha.run(done);
+  });
 }
-
-export {
-  MochaRunner as default,
-  MochaRunner
-};

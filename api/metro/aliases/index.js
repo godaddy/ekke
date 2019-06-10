@@ -30,12 +30,6 @@ module.exports = {
   'stream': require.resolve('stream-browserify'),
 
   //
-  // We need to force mocha to the node version instead of the browser
-  // version in order for it to compile.
-  //
-  'mocha': require.resolve('mocha/lib/mocha'),
-
-  //
   // Prevent duplicate React-Native execution, the polyfill will re-use the
   // existing React-Native import that is bundled with the application. This
   // will ensure that all NativeModules are correctly registered.

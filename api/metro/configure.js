@@ -3,6 +3,7 @@ const { FileStore } = require('metro-cache');
 const resolve = require('metro-resolver').resolve;
 const diagnostics = require('diagnostics');
 const source = require('./source');
+const { write } = require('./env');
 const path = require('path');
 
 //
@@ -80,13 +81,11 @@ async function configure(flags, ekke) {
   // the use the JSON syntax of babel, so we can inject that to the
   // `process.env` which will be passed to the worker processes.
   //
-  const babel = await ekke.exec('modify', 'babel');
+  const babel = await ekke.exec('modify', 'babel', {});
+  const alias = await ekke.exec('modify', 'babel.alias', {});
 
-  try {
-    process.env.EKKE_BABEL = JSON.stringify(babel);
-  } catch (e) {
-    throw new Error('Plugins are only allowed return JSON in the babel modifier');
-  }
+  if (babel) write('babel', babel);
+  if (alias) write('babel.alias', alias);
 
   custom.resolver.extraNodeModules = {
     [moduleName]: process.cwd()

@@ -2,6 +2,7 @@ const { getCacheKey } = require('metro-react-native-babel-transformer');
 const { transformSync } = require('@babel/core');
 const merge = require('babel-merge');
 const aliases = require('./aliases');
+const { read } = require('./env');
 
 /**
  * Generates all the required presets for babel transformation.
@@ -44,7 +45,7 @@ function plugins(existing = [], options) {
   return [
     [require.resolve('babel-plugin-rewrite-require'), {
       throwForNonStringLiteral: true,
-      aliases
+      Object.assign(aliases, read('babel.alias') || {})
     }],
 
     ...optional,
@@ -73,14 +74,6 @@ function transform(transformOptions) {
   const old = process.env.BABEL_ENV;
   process.env.BABEL_ENV = options.dev ? 'development' : old || 'production';
 
-  //
-  // Configuration is given using the `process.env.EKKE_BABEL` flag as JSON
-  // blob as the babel transformation works in a worker farm.
-  //
-  // @TODO see if we can re-use the transformOptions that are passed through
-  // metro.
-  //
-  const external = process.env.EKKE_BABEL ? JSON.parse(process.env.EKKE_BABEL) : {};
   const config = {
     caller: {
       name: 'metro',
@@ -96,7 +89,7 @@ function transform(transformOptions) {
     ...merge({
       presets: presets([], options),
       plugins: plugins(transformOptions.plugins, options)
-    }, external)
+    }, read('babel') || {})
   };
 
   try {

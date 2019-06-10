@@ -31,20 +31,22 @@ function tasked(fn) {
    * @return {Boolean} Indication of success.
    * @public
    */
-  return async function executor(task) {
+  async function run(task) {
     if (!allowed) return false;
 
     try { await task(done); }
     catch (e) { return await done(e); }
 
     return true;
-  };
+  }
+
+  return { run, done };
 }
 
 /**
  * Allow function to return a destroy function.
  *
- * @param {Function} done Completion callback for teardown.
+ * @param {Function} [done] Completion callback for teardown.
  * @returns {Object} Destroy and teardown methods.
  * @public
  */
@@ -78,7 +80,7 @@ function destroyer(done) {
         .filter(Boolean) // Clean up again, to remove non-async functions.
     );
 
-    await done();
+    if (done) await done();
   }
 
   return { destroy, teardown };

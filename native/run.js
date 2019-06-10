@@ -31,7 +31,7 @@ async function runner({ screen, subway, config, plugin }) {
     plugin.reset();
   });
 
-  const run = tasked(async function completion(e) {
+  const { run } = tasked(async function completion(e) {
     const { err, complete } = plugin.exec('modify', 'complete', { err: e, complete: true });
 
     //
@@ -105,6 +105,7 @@ async function runner({ screen, subway, config, plugin }) {
   // Execute the the plugins as quickly as possible so they can start listening
   // to the various of plugin events.
   //
+  debug('executes the --plugin');
   await run(() => {
     const results = plugins();
 
@@ -119,11 +120,13 @@ async function runner({ screen, subway, config, plugin }) {
   //
   // Execute all files that should be ran before we require the test files.
   //
+  debug('executes the --require');
   await run(() => requires());
 
   //
   // Execute all the files that we found with our globs.
   //
+  debug('executing glob requires');
   await run(() => globs());
 
   //
@@ -132,6 +135,8 @@ async function runner({ screen, subway, config, plugin }) {
   //
   await run(async (done) => {
     await plugin.exec('modify', 'run', { done });
+
+    done(new Error('None of the plugins executed the done function'));
   });
 }
 

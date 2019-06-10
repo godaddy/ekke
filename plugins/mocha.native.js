@@ -9,11 +9,11 @@ import Mocha from 'mocha';
 export default function plugin({ modify }) {
   let mocha;
 
-  modify('before', async function ({ config }) {
+  modify('before', async function before({ config }) {
     const fgrep = config.fgrep || '';
     const grep = config.grep || '';
 
-    const mocha = new Mocha({
+    mocha = new Mocha({
       grep: grep.length && grep,
       fgrep: fgrep.length && fgrep
     });
@@ -40,7 +40,12 @@ export default function plugin({ modify }) {
     mocha.suite.emit('pre-require', global, '', mocha);
   });
 
-  modify('run', async function ({ done }) {
-    mocha.run(done);
+  modify('run', function run({ done }) {
+    return new Promise(function pinky(resolve) {
+      mocha.run(function () {
+        done(...arguments);
+        resolve();
+      });
+    });
   });
 }

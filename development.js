@@ -3,7 +3,7 @@ import create from './components/ekke';
 import Subway from './native/subway';
 import Screen from './native/screen';
 import Plugin from './native/plugin';
-import run from './native/run';
+import runner from './native/runner';
 
 /**
  * Create our Ekke component that allows us to intercept the rootTag
@@ -25,8 +25,8 @@ const Ekke = create(async function mounted(rootTag, props = {}) {
   const screen = new Screen(rootTag);
   const plugin = new Plugin(subway);
 
-  subway.on('run', function start({ using = 'mocha', opts = {} }) {
-    run({
+  subway.on('run', function run({ opts = {} }) {
+    runner({
       config: { ...props, ...opts },
       subway,
       screen,

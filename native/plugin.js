@@ -34,7 +34,7 @@ class Plugin extends EventEmitter {
       context: this
     });
 
-    ['bridge', 'modify', 'transfer', 'define'].forEach((method) => {
+    ['bridge', 'modify', 'transfer', 'define', 'exec'].forEach((method) => {
       this[method] = this[method].bind(this);
     });
 
@@ -154,6 +154,7 @@ class Plugin extends EventEmitter {
       modify: this.modify,
       bridge: this.bridge,
       define: this.define,
+      exec: this.exec,
 
       /**
        * Function to be executed when the plugin is removed/destroyed.

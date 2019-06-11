@@ -1,6 +1,6 @@
 const { mergeConfig, loadConfig } = require('metro-config');
-const { FileStore } = require('metro-cache');
 const resolve = require('metro-resolver').resolve;
+const { FileStore } = require('metro-cache');
 const diagnostics = require('diagnostics');
 const source = require('./source');
 const { write } = require('./env');
@@ -96,8 +96,10 @@ async function configure(flags, ekke) {
   // It could be that we've gotten multiple glob patterns, so we need to
   // iterate over each.
   //
+  const patterns = await ekke.exec('modify', 'globs', flags.argv || []);
   const globs = [];
-  (flags.argv || []).filter(Boolean).forEach(function find(file) {
+
+  patterns.filter(Boolean).forEach(function find(file) {
     if (!~file.indexOf('*')) return globs.push(file);
 
     Array.prototype.push.apply(globs, glob.sync(file));
@@ -123,12 +125,12 @@ async function configure(flags, ekke) {
   // that fit our theme.
   //
   const filePath = await source({
-    browser: await ekke.exec('modify', 'browsermode', false),
-    globs: await ekke.exec('modify', 'globs', globs),
+    browser: await ekke.exec('modify', 'process.browser', false),
     library: await ekke.exec('modify', 'library'),
     requires: [].concat(flags.require),
     plugins: Array.from(ekke.registry),
-    moduleName
+    moduleName,
+    globs
   });
 
   custom.resolver.resolveRequest = function resolveRequest(context, file, platform) {

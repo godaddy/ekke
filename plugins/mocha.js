@@ -8,7 +8,7 @@
  * @returns
  */
 module.exports = function plugin({ modify }) {
-  modify('browsermode', function browser() {
+  modify('process.browser', function browser() {
     return true;
   });
 

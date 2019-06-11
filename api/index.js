@@ -195,6 +195,7 @@ class Ekke extends EventEmitter {
       modify: this.shrubbery.add.bind(this.shrubbery, 'modify'),
       bridge: this.shrubbery.add.bind(this.shrubbery, 'bridge'),
       define: this.define,
+      exec: this.exec,
 
       /**
        * Register a new file or module that needs to be loaded and executed

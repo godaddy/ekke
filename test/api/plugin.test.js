@@ -21,10 +21,11 @@ describe('(API) Plugins', function () {
       bridge.once('plugin', function plugin(api) {
         assume(api).is.a('object');
 
-        assume(api).is.length(4);
+        assume(api).is.length(5);
         assume(api.register).is.a('function');
         assume(api.modify).is.a('function');
         assume(api.bridge).is.a('function');
+        assume(api.exec).is.a('function');
         assume(api.define).is.a('function');
 
         next();
@@ -92,6 +93,19 @@ describe('(API) Plugins', function () {
 
         ekke.use(fixture);
         ekke.foo();
+      });
+    });
+
+    describe('#exec', function () {
+      it('is ekke.exec', function () {
+        const done = assume.plan(1);
+
+        bridge.once('plugin', function plugin({ exec }) {
+          assume(exec).equals(ekke.exec);
+        });
+
+        ekke.use(fixture);
+        done();
       });
     });
 

@@ -1,4 +1,4 @@
-import { tasked, destroyer } from '../native/util';
+import { tasked, destroyer } from '../native/utils';
 import Evaluator from '../native/evaluator';
 import uncaught from '../native/uncaught';
 import intercept from '../native/console';
@@ -115,6 +115,7 @@ async function runner({ screen, subway, config, plugin }) {
     });
   });
 
+  config = await plugin.exec('modify', 'config', config);
   await plugin.exec('modify', 'before', { requires, globs, config });
 
   //

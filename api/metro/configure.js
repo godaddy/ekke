@@ -5,6 +5,7 @@ const diagnostics = require('diagnostics');
 const source = require('./source');
 const { write } = require('./env');
 const path = require('path');
+const glob = require('glob');
 
 //
 // Debug logger.
@@ -92,6 +93,17 @@ async function configure(flags, ekke) {
   };
 
   //
+  // It could be that we've gotten multiple glob patterns, so we need to
+  // iterate over each.
+  //
+  const globs = [];
+  (flags.argv || []).filter(Boolean).forEach(function find(file) {
+    if (!~file.indexOf('*')) return globs.push(file);
+
+    Array.prototype.push.apply(globs, glob.sync(file));
+  });
+
+  //
   // Mother of all hacks, we don't have a single entry point, we have multiple
   // as our test files are represented in a glob, that can point to an infinite
   // number of modules.
@@ -111,10 +123,11 @@ async function configure(flags, ekke) {
   // that fit our theme.
   //
   const filePath = await source({
+    browser: await ekke.exec('modify', 'browsermode', false),
+    globs: await ekke.exec('modify', 'globs', globs),
+    library: await ekke.exec('modify', 'library'),
     requires: [].concat(flags.require),
     plugins: Array.from(ekke.registry),
-    using: flags.using,
-    globs: flags.argv,
     moduleName
   });
 
@@ -179,4 +192,7 @@ async function configure(flags, ekke) {
   return merged;
 }
 
+//
+// Expose our configuration generator
+//
 module.exports = configure;

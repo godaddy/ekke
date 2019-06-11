@@ -47,7 +47,7 @@ describe('(api/metro) source', function () {
   it('returns the location of the created file', async function () {
     const location = await source({
       moduleName: 'ekke-ekke-ekke',
-      globs: ['test/api/*.js'],
+      globs: ['test/api/source.test.js'],
     });
 
     assume(location).is.a('string');
@@ -57,7 +57,7 @@ describe('(api/metro) source', function () {
   it('stores files in our tmp directory', async function () {
     const location = await source({
       moduleName: 'ekke-ekke-ekke',
-      globs: ['test/api/*.js'],
+      globs: ['test/api/source.test.js'],
     });
 
     const filename = path.basename(location);
@@ -69,7 +69,7 @@ describe('(api/metro) source', function () {
   it('includes our requires as requires', async function () {
     const location = await source({
       moduleName: 'ekke-ekke-ekke',
-      globs: ['test/api/*.js'],
+      globs: ['test/api/source.test.js'],
       requires: ['require-name', 'another-require']
     });
 
@@ -81,7 +81,7 @@ describe('(api/metro) source', function () {
   it('includes our plugins as requires', async function () {
     const location = await source({
       moduleName: 'ekke-ekke-ekke',
-      globs: ['test/api/*.js'],
+      globs: ['test/api/source.test.js'],
       plugins: ['plugin-name', 'another-plugin']
     });
 
@@ -93,7 +93,7 @@ describe('(api/metro) source', function () {
   it('prefixes the glob with the moduleName', async function () {
     const location = await source({
       moduleName: 'fake-name-here',
-      globs: ['test/api/*.js']
+      globs: ['test/api/source.test.js']
     });
 
     const file = await readFile(location, 'utf-8');

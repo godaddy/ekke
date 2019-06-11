@@ -1,7 +1,6 @@
 const diagnostics = require('diagnostics');
 const { promisify } = require('util');
 const crypto = require('crypto');
-const glob = require('glob');
 const path = require('path');
 const fs = require('fs');
 
@@ -57,25 +56,12 @@ function transform(sources = [], prefix = '') {
  *
  * @param {String[]} [globs] The glob patterns that gather the files.
  * @param {String} moduleName Fake module name of the application root.
- * @param {String} using The test runner that needs to be bundled.
  * @returns {Promise<string>} Location of our fake file.
  * @public
  */
 async function source(data) {
-  const globs = [];
-  const { moduleName, using, requires, plugins } = data;
-  const browser = 'browser' in data ? data.browser : using === 'mocha';
-  const library = using ? `require(${JSON.stringify(using)})` : JSON.stringify(using);
-
-  //
-  // It could be that we've gotten multiple glob patterns, so we need to
-  // iterate over each.
-  //
-  (data.globs || []).filter(Boolean).forEach(function find(file) {
-    if (!~file.indexOf('*')) return globs.push(file);
-
-    Array.prototype.push.apply(globs, glob.sync(file));
-  });
+  const { moduleName, browser, requires, plugins, globs } = data;
+  const library = 'library' in data ? `require(${JSON.stringify(data.library)})` : JSON.stringify(data.library);
 
   //
   // Create dummy content for the source which allows to get access to:

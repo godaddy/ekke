@@ -8,7 +8,13 @@
  * @returns
  */
 module.exports = function plugin({ modify }) {
-  modify('babel.alias', {
-    mocha: require.resolve('mocha/lib/mocha')
+  modify('browsermode', function browser() {
+    return true;
+  });
+
+  modify('babel.alias', function alias(aliases) {
+    return Object.assign(aliases, {
+      mocha: require.resolve('mocha/lib/mocha')
+    });
   });
 };

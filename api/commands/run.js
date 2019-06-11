@@ -11,10 +11,10 @@ const define = require('./define');
 */
 async function run({ debug, ekke }, flags) {
   const { ws } = await metro(flags, ekke);
+  const runner = flags.using;
   const { exec } = ekke;
 
   ws.on('connection', async (socket) => {
-    const runner = flags.using;
     const opts = flags[runner] || {};
 
     /**
@@ -87,7 +87,7 @@ async function run({ debug, ekke }, flags) {
       }
     });
 
-    await send('run', { ...flags, opts });
+    await send('run', { ...flags, ...opts });
     await exec('modify', 'websocket', { send });
   });
 }

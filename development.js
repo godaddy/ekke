@@ -25,7 +25,7 @@ const Ekke = create(async function mounted(rootTag, props = {}) {
   const screen = new Screen(rootTag);
   const plugin = new Plugin(subway);
 
-  subway.on('run', function run({ opts = {} }) {
+  subway.on('run', function run(opts = {}) {
     runner({
       config: { ...props, ...opts },
       subway,

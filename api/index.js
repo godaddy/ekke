@@ -136,14 +136,20 @@ class Ekke extends EventEmitter {
     // additional CLI flags that could affect our behavior.
     //
     const config = this.config();
-    if (!config.plugin) return;
+    const using = [].concat(config.using).filter(Boolean);
+    const plugins = [].concat(config.plugin).filter(Boolean);
 
     //
-    // The plugin variable can either be a string, or an array of strings. By
-    // using concat we will either flatten them in the array, or abuse the
-    // method as push and push in a single item.
+    // When the `--using` indicates that one of our own bundled plugins should
+    // be loaded.
     //
-    [].concat(config.plugin).forEach((plugin) => this.use(plugin));
+    using.forEach((internal) => this.use(path.join('..', 'plugins', internal)));
+
+    //
+    // Now that our internal plugins are loaded, we load the rest of the user
+    // specified plugins.
+    //
+    plugins.forEach((plugin) => this.use(plugin));
   }
 
   /**
@@ -231,7 +237,6 @@ Ekke.commands = {
  * @public
  */
 Ekke.defaults = {
-  'using': 'mocha',                                        // Default test runner.
   'hostname': 'localhost',                                 // Hostname we should create our server upon
   'port': 1975,                                            // The port number of the created server
   'silent': true,                                          // Silence Metro bundler

@@ -1,6 +1,8 @@
 const { getCacheKey } = require('metro-react-native-babel-transformer');
 const { transformSync } = require('@babel/core');
+const merge = require('babel-merge');
 const aliases = require('./aliases');
+const { read } = require('./env');
 
 /**
  * Generates all the required presets for babel transformation.
@@ -14,7 +16,7 @@ function presets(existing = [], options) {
   const { experimentalImportSupport, ...presetOptions } = options;
 
   return [
-    [require('metro-react-native-babel-preset'), {
+    [require.resolve('metro-react-native-babel-preset'), {
       ...presetOptions,
 
       disableImportExportTransform: experimentalImportSupport,
@@ -37,13 +39,13 @@ function plugins(existing = [], options) {
   const optional = [];
 
   if (options.inlineRequires) {
-    optional.push(require('babel-preset-fbjs/plugins/inline-requires'));
+    optional.push(require.resolve('babel-preset-fbjs/plugins/inline-requires'));
   }
 
   return [
-    [require('babel-plugin-rewrite-require'), {
-      throwForNonStringLiteral: true,
-      aliases
+    [require.resolve('babel-plugin-rewrite-require'), {
+      aliases: Object.assign(aliases, read('babel.alias') || {}),
+      throwForNonStringLiteral: true
     }],
 
     ...optional,
@@ -72,21 +74,26 @@ function transform(transformOptions) {
   const old = process.env.BABEL_ENV;
   process.env.BABEL_ENV = options.dev ? 'development' : old || 'production';
 
-  try {
-    const result = transformSync(src, {
-      caller: {
-        name: 'metro',
-        platform: options.platform
-      },
-      ast: true,
-      babelrc: !!options.enableBabelRCLookup,
-      code: false,
-      highlightCode: true,
-      filename: filename,
+  const config = {
+    caller: {
+      name: 'metro',
+      platform: options.platform
+    },
+    ast: true,
+    babelrc: !!options.enableBabelRCLookup,
+    code: false,
+    highlightCode: true,
+    filename: filename,
+    sourceType: 'unambiguous',
+
+    ...merge({
       presets: presets([], options),
-      plugins: plugins(transformOptions.plugins, options),
-      sourceType: 'unambiguous'
-    });
+      plugins: plugins(transformOptions.plugins, options)
+    }, read('babel') || {})
+  };
+
+  try {
+    const result = transformSync(src, config);
 
     //
     // When a file is ignored, it doesn't return a result, so we need to

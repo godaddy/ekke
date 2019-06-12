@@ -11,7 +11,7 @@ const EventEmitter = require('eventemitter3');
 // our tests usually depend upon, so we need to polyfill, our polyfill B).
 //
 processed.env = env;
-processed.browser = '${browser}' === 'true';
+processed.browser = ${browser};
 
 const events = new EventEmitter();
 
@@ -37,8 +37,27 @@ global.__dirname = '${__dirname}';
 global.__filename = 'not supported';
 
 module.exports = {
-  runner: require('${runner}'),
-  suites: function suites() {
-    ${requires}
+  library: ${library},
+
+  //
+  // All requires that need to be executed **before** the runner, but **after**
+  // the plugins.
+  //
+  requires: function requires() {
+    return ${requires};
+  },
+
+  //
+  // Executes all plugins.
+  //
+  plugins: function plugins() {
+    return ${plugins};
+  },
+
+  //
+  // Requires all the files that are specified in the provide glob patterns.
+  //
+  globs: function globs() {
+    return ${globs};
   }
 }

@@ -1,20 +1,20 @@
 import once from 'one-time/async';
 
 /**
- * Lifecyle management for when test suite is about to run.
+ * Intercept console messages
  *
  * @async
  * @param {Object} Runner Our test runner internals.
  * @returns {Promise<Function>} The after function, that runs the clean-up.
  * @public
  */
-async function before({ send }) {
+async function intercept({ send }) {
   const ocm = ['log', 'info', 'warn', 'error'];
   const oc = {};
 
   ocm.forEach(function each(method) {
     oc[method] = console[method];
-    console[method] = send.bind(send, method);
+    console[method] = send.bind(send, `console.${method}`);
   });
 
   return once(async function after() {
@@ -26,6 +26,6 @@ async function before({ send }) {
 }
 
 export {
-  before as default,
-  before
+  intercept as default,
+  intercept
 };

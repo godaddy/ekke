@@ -1,6 +1,5 @@
 import createEkke from '../../components/ekke';
 import { describe, it } from 'mocha';
-import { View } from 'react-native';
 import { render } from 'ekke';
 import assume from 'assume';
 import React from 'react';

@@ -1,5 +1,4 @@
 import stringify from 'json-stringify-safe';
-import { READYSTATE } from './constants';
 import EventEmitter from 'eventemitter3';
 import { Platform } from 'react-native';
 import diagnostics from 'diagnostics';
@@ -33,7 +32,6 @@ class Subway extends EventEmitter {
     //
     this.entry = 'Ekke-Ekke-Ekke-Ekke-PTANG.Zoo-Boing.Znourrwringmm';
 
-    this.readyState = READYSTATE.CLOSED;  // The readyState of the thing.
     this.timers = new Timers();           // Our timer management.
     this.hostname = hostname;             // Hostname of the URL to hit.
     this.active = new Set();              // Active running XHR requests.
@@ -79,7 +77,7 @@ class Subway extends EventEmitter {
      * @param {Boolean} [alive] Should we check if CLI comes back to life?
      * @public
      */
-    const cleanup = once(function cleanup(alive = false) {
+    const cleanup = once(function cleaner(alive = false) {
       try {
         socket.close();
       } catch (e) {
@@ -155,7 +153,7 @@ class Subway extends EventEmitter {
       cleanup(true);
     });
 
-    this.timers.setTimeout('socket', function timeout() {
+    this.timers.setTimeout('socket', function timedout() {
       debug('failed to connection in timely manner');
       cleanup(true);
     }, timeout);
@@ -169,32 +167,55 @@ class Subway extends EventEmitter {
    *
    * @param {String} event The event name.
    * @param {Object|Array|String} payload What ever the message is.
+   * @returns {Promise} Resolves when the message is send.
    * @public
    */
   send(event, ...payload) {
-    const message = stringify({ event, payload });
+    return new Promise((resolve, reject) => {
+      let message;
 
-    //
-    // We can only send messages when we have a socket, and if the socket
-    // is in an WebSocket.OPEN state. In any other case it would most likely
-    // cause an error.
-    //
-    if (!this.socket || this.socket.readyState !== WebSocket.OPEN) {
-      debug('no active connection has been established yet, queueing message', message);
-      this.queue.push(message);
+      try {
+        message = stringify({ event, payload });
+      } catch (e) {
+        return reject(e);
+      }
 
-      return;
-    }
+      /**
+       * We need to deal with a Node.js based error first callbacks.
+       *
+       * @param {Error} [err] Error first callback.
+       * @param {Mixed} data The actual response.
+       * @returns {Void} Return early.
+       * @private
+       */
+      function fn(err, data) {
+        if (err) return reject(err);
+        resolve(data);
+      }
 
-    //
-    // While WebSocket.OPEN should give enough confidence that it's safe to
-    // write.. It's better to be safe than sorry here.
-    //
-    try {
-      this.socket.send(message);
-    } catch (e) {
-      debug('websocket lied, we cant write :sadface:', e);
-    }
+      //
+      // We can only send messages when we have a socket, and if the socket
+      // is in an WebSocket.OPEN state. In any other case it would most likely
+      // cause an error.
+      //
+      if (!this.socket || this.socket.readyState !== WebSocket.OPEN) {
+        debug('no active connection has been established yet, queueing message', message);
+        this.queue.push(message);
+
+        return resolve();
+      }
+
+      //
+      // While WebSocket.OPEN should give enough confidence that it's safe to
+      // write.. It's better to be safe than sorry here.
+      //
+      try {
+        this.socket.send(message, fn);
+      } catch (e) {
+        debug('websocket lied, we cant write :sadface:', e);
+        reject(e);
+      }
+    });
   }
 
   /**
@@ -292,8 +313,6 @@ class Subway extends EventEmitter {
    * @public
    */
   async setup() {
-    this.readyState = READYSTATE.READY;
-
     this.preload();
     this.connect();
   }

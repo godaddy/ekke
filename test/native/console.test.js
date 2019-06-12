@@ -1,18 +1,18 @@
-import before from '../../native/lifecycle';
+import intercept from '../../native/console';
 import { describe, it } from 'mocha';
 import assume from 'assume';
 
-describe('(native) lifecycle', function () {
+describe('(native) console', function () {
   const api = {
     send: () => {}
   };
 
   it('is an async function', function () {
-    assume(before).is.a('asyncfunction');
+    assume(intercept).is.a('asyncfunction');
   });
 
   it('returns an async function', async function () {
-    const after = await before({ ...api });
+    const after = await intercept({ ...api });
 
     assume(after).is.a('asyncfunction');
     await after();
@@ -20,17 +20,17 @@ describe('(native) lifecycle', function () {
 
   it('intercepts console[info|warn|log|error]', async function () {
     const asserts = [
-      { method: 'warn', payload: ['what', 'is', 'up'] },
-      { method: 'log', payload: ['im just loggin', { data: 'here' }] },
-      { method: 'error', payload: ['error here'] },
-      { method: 'info', payload: ['works as intended'] }
+      { method: 'console.warn', payload: ['what', 'is', 'up'] },
+      { method: 'console.log', payload: ['im just loggin', { data: 'here' }] },
+      { method: 'console.error', payload: ['error here'] },
+      { method: 'console.info', payload: ['works as intended'] }
     ];
 
     const send = (method, ...payload) => {
       assume({ method, payload }).deep.equals(asserts.shift());
     };
 
-    const after = await before({ send });
+    const after = await intercept({ send });
 
     console.warn('what', 'is', 'up');
     console.log('im just loggin', { data: 'here' });

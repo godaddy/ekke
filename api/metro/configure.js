@@ -1,9 +1,11 @@
 const { mergeConfig, loadConfig } = require('metro-config');
-const { FileStore } = require('metro-cache');
 const resolve = require('metro-resolver').resolve;
+const { FileStore } = require('metro-cache');
 const diagnostics = require('diagnostics');
 const source = require('./source');
+const { write } = require('./env');
 const path = require('path');
+const glob = require('glob');
 
 //
 // Debug logger.
@@ -15,10 +17,11 @@ const debug = diagnostics('ekke:configure');
  * the tests.
  *
  * @param {Object} flags The configuration flags of the API/CLI.
+ * @param {Ekke} ekke The Ekke instance.
  * @returns {Promise<Object>} configuration.
  * @public
  */
-async function configure(flags) {
+async function configure(flags, ekke) {
   const reactNativePath = path.dirname(require.resolve('react-native/package.json'));
   const config = await loadConfig();
   const custom = {
@@ -40,7 +43,7 @@ async function configure(flags) {
   //
   // See: https://github.com/facebook/react-native/issues/3099
   //
-  const fake = 'ekke-ekke-ekke-ekke';
+  const moduleName = 'ekke-ekke-ekke-ekke';
 
   //
   // Check if we're asked to nuke the cache, we should. This option will
@@ -70,9 +73,37 @@ async function configure(flags) {
   //
   custom.transformer.babelTransformerPath = path.join(__dirname, 'babel.js');
 
+  //
+  // Metro uses the (jest) worker farm to create multiple babel transform
+  // processes to speed up the build time. This is also the reason why they
+  // use a `babelTransformerPath` instead of allowing a function.
+  //
+  // So in order for plugins to modify the babel config, we're going to allow
+  // the use the JSON syntax of babel, so we can inject that to the
+  // `process.env` which will be passed to the worker processes.
+  //
+  const babel = await ekke.exec('modify', 'babel', {});
+  const alias = await ekke.exec('modify', 'babel.alias', {});
+
+  if (babel) write('babel', babel);
+  if (alias) write('babel.alias', alias);
+
   custom.resolver.extraNodeModules = {
-    [fake]: process.cwd()
+    [moduleName]: process.cwd()
   };
+
+  //
+  // It could be that we've gotten multiple glob patterns, so we need to
+  // iterate over each.
+  //
+  const patterns = await ekke.exec('modify', 'globs', flags.argv || []);
+  const globs = [];
+
+  patterns.filter(Boolean).forEach(function find(file) {
+    if (!~file.indexOf('*')) return globs.push(file);
+
+    Array.prototype.push.apply(globs, glob.sync(file));
+  });
 
   //
   // Mother of all hacks, we don't have a single entry point, we have multiple
@@ -94,9 +125,12 @@ async function configure(flags) {
   // that fit our theme.
   //
   const filePath = await source({
-    globs: [].concat(flags.require).concat(flags.argv),
-    runner: flags.using,
-    fake
+    browser: await ekke.exec('modify', 'process.browser', false),
+    library: await ekke.exec('modify', 'library', false),
+    requires: [].concat(flags.require).filter(Boolean),
+    plugins: Array.from(ekke.registry),
+    moduleName,
+    globs
   });
 
   custom.resolver.resolveRequest = function resolveRequest(context, file, platform) {
@@ -154,10 +188,13 @@ async function configure(flags) {
   custom.resolver.resolverMainFields = ['react-native', 'browser', 'main'];
   custom.transformer.assetRegistryPath = path.join(reactNativePath, 'Libraries/Image/AssetRegistry');
 
-  const merged = mergeConfig(config, custom);
+  const merged = mergeConfig(config, custom, await ekke.exec('modify', 'metro.config'));
   debug('metro config', merged);
 
   return merged;
 }
 
+//
+// Expose our configuration generator
+//
 module.exports = configure;

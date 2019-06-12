@@ -1,4 +1,4 @@
-import { render as renderProd, Ekke } from '../../production';
+import { render as renderProd, use, Ekke } from '../../production';
 import { describe, it } from 'mocha';
 import { View } from 'react-native';
 import { render } from 'ekke';
@@ -13,13 +13,35 @@ describe('(ekke) production', function () {
   });
 
   describe('#render', function () {
+    it('is a function', function () {
+      assume(renderProd).is.a('function');
+    });
+
     it('throw an error, as it doesnt work in prod', async function () {
       const done = assume.plan(2);
 
       try { await renderProd(<View />); }
       catch (e) {
         assume(e).is.a('error');
-        assume(e.message).equals('render method is disabled in production');
+        assume(e.message).equals('The render method is disabled in production');
+      }
+
+      done();
+    });
+  });
+
+  describe('#use', function () {
+    it('is a function', function () {
+      assume(use).is.a('function');
+    });
+
+    it('throw an error, as it doesnt work in prod', async function () {
+      const done = assume.plan(2);
+
+      try { await use('name'); }
+      catch (e) {
+        assume(e).is.a('error');
+        assume(e.message).equals('The use method is disabled in production');
       }
 
       done();

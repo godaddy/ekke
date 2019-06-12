@@ -1,8 +1,13 @@
 const EventEmitter = require('eventemitter3');
 const diagnostics = require('diagnostics');
-const cli = require('argh').argv;
-const os = require('os');
+const shrubbery = require('shrubbery');
 const path = require('path');
+const os = require('os');
+
+//
+// Create a debugger.
+//
+const debug = diagnostics('ekke:api');
 
 /**
  * A basic API, and CLI interface for Ekke. The only difference between
@@ -10,14 +15,27 @@ const path = require('path');
  * the constructor, and call our API methods.
  *
  * @constructor
- * @param {Object} [options] Parsed CLI arguments, or options object.
+ * @param {Object} options Parsed CLI arguments, or options object.
  * @public
  */
 class Ekke extends EventEmitter {
-  constructor(options = cli) {
+  constructor(options = {}) {
     super();
 
     const ekke = this;
+
+    this.registry = new Set();
+    this.plugins = {
+      modify: new Map(),      // Store our modifier functions.
+      bridge: new Map()       // Store the bridge functions.
+    };
+
+    this.shrubbery = shrubbery(this.plugins, {
+      error: function errorhandler(e) {
+        ekke.emit('error', e);
+      },
+      context: ekke
+    });
 
     /**
      * Merge the options, with our defaults to create our API configuration.
@@ -73,31 +91,131 @@ class Ekke extends EventEmitter {
   /**
    * Initialize our API.
    *
-   * @public
+   * @private
    */
   initialize() {
     //
     // Introduce our commands to the prototype.
     //
     Object.entries(Ekke.commands).forEach(([method, fn]) => {
-      this[method] = fn.bind(this, {
-        debug: diagnostics(`ekke:${method}`),
-        ekke: this
-      });
+      this.define(method, fn);
+    });
+
+    //
+    // Pre-bind our utility functions.
+    //
+    ['use', 'exec', 'define'].forEach(method => {
+      this[method] = this[method].bind(this);
     });
 
     //
     // Proxy the log events to the correct console.
     //
-    this.on('log', args => console.log(...args));
-    this.on('warn', args => console.warn(...args));
-    this.on('info', args => console.info(...args));
-    this.on('error', args => console.error(...args));
+    this.on('console.log', args => console.log(...args));
+    this.on('console.warn', args => console.warn(...args));
+    this.on('console.info', args => console.info(...args));
+    this.on('console.error', args => console.error(...args));
+
+    this.on('bridge', async ({ name, reply, data }, send) => {
+      const payload = await this.exec('bridge', name, data);
+
+      try {
+        await send(reply, payload);
+      } catch (e) {
+        debug(`failed to send reply(${reply}) over the bridge`, e);
+      }
+    });
 
     //
-    // Generic event handling
+    // Generic event handling.
     //
     this.on('ping', (args, send) => send('pong', args));
+
+    //
+    // Finally, when we've initialized all our internals we can process some
+    // additional CLI flags that could affect our behavior.
+    //
+    const config = this.config();
+    const using = [].concat(config.using).filter(Boolean);
+    const plugins = [].concat(config.plugin).filter(Boolean);
+
+    //
+    // When the `--using` indicates that one of our own bundled plugins should
+    // be loaded.
+    //
+    using.forEach((internal) => this.use(path.join('..', 'plugins', internal)));
+
+    //
+    // Now that our internal plugins are loaded, we load the rest of the user
+    // specified plugins.
+    //
+    plugins.forEach((plugin) => this.use(plugin));
+  }
+
+  /**
+   * Defines a new API method or command that can be executed.
+   *
+   * @param {String} method The name of the method it should be introduced as.
+   * @param {Function} fn Function to execute.
+   * @public
+   */
+  define(method, fn) {
+    if (method in this) debug(`plugin is overriding existing method ${method}`);
+
+    const bound = fn.bind(this, {
+      debug: diagnostics(`ekke:${method}`),
+      ekke: this
+    });
+
+    Object.keys(fn).forEach(function assignProp(key) {
+      bound[key] = fn[key];
+    });
+
+    this[method] = bound;
+  }
+
+  /**
+   * Execute all assigned functions for the given map & method.
+   *
+   * @param {String} name Name of the plugin map we should run on.
+   * @param {String} method Name of the method we want to execute.
+   * @param {Object} data Data the functions should receive.
+   * @returns {Mixed} What even was send as data.
+   * @public
+   */
+  exec() {
+    return this.shrubbery.exec(...arguments);
+  }
+
+  /**
+   * Register a new plugin.
+   *
+   * @param {String} name The name of the plugin.
+   * @returns {Boolean} Indiction that the plugin was added or not.
+   * @public
+   */
+  use(name) {
+    const plugin = require(name);
+
+    plugin({
+      modify: this.shrubbery.add.bind(this.shrubbery, 'modify'),
+      bridge: this.shrubbery.add.bind(this.shrubbery, 'bridge'),
+      define: this.define,
+      exec: this.exec,
+
+      /**
+       * Register a new file or module that needs to be loaded and executed
+       * as plugin on React-Native.
+       *
+       * @param {String} file Name or path the file/module.
+       * @public
+       */
+      register: (file = name) => {
+        if (!this.registry.has(file)) {
+          this.registry.add(file);
+        }
+      }
+    });
   }
 }
 

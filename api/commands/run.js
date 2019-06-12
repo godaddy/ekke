@@ -1,4 +1,6 @@
+const stringify = require('json-stringify-safe');
 const metro = require('../server');
+const define = require('./define');
 
 /**
  * Start our servers.
@@ -7,11 +9,12 @@ const metro = require('../server');
  * @param {Object} flags CLI flags.
  * @public
 */
-module.exports = async function run({ debug, ekke }, flags) {
-  const { ws } = await metro(flags);
+async function run({ debug, ekke }, flags) {
+  const { ws } = await metro(flags, ekke);
+  const runner = flags.using;
+  const { exec } = ekke;
 
-  ws.on('connection', (socket) => {
-    const runner = flags.using;
+  ws.on('connection', async (socket) => {
     const opts = flags[runner] || {};
 
     /**
@@ -20,19 +23,31 @@ module.exports = async function run({ debug, ekke }, flags) {
      *
      * @param {String} event Name of the event.
      * @param {Object|Array} payload Data to transfer.
+     * @returns {Promise} Resolve when socket has written.
      * @public
      */
     function send(event, payload) {
       return new Promise(function sender(resolve, reject) {
-        socket.send(JSON.stringify({ event, payload }), function written(e) {
-          if (e) return reject(e);
+        let message;
 
-          resolve();
-        });
+        try {
+          message = stringify({ event, payload });
+        } catch (e) {
+          return reject(e);
+        }
+
+        try {
+          socket.send(message, function written(e) {
+            if (e) return reject(e);
+
+            resolve();
+          });
+        } catch (e) {
+          reject(e);
+        }
       });
     }
 
-    send('run', { ...flags, opts });
     socket.on('message', (message) => {
       let event, payload;
 
@@ -71,5 +86,40 @@ module.exports = async function run({ debug, ekke }, flags) {
         } else if (!flags.watch) process.exit(0);
       }
     });
+
+    await send('run', { ...flags, ...opts });
+    await exec('modify', 'websocket', { send });
   });
-};
+}
+
+//
+// Expose the interface.
+//
+module.exports = define(run, {
+  //
+  // Detailed explanation of what this command does, and achieves.
+  //
+  description: 'Run the given the given glob of test files for the specified runner.',
+
+  //
+  // Different API examples to aid the user.
+  //
+  examples: 'ekke run ./test/*.test.js --using mocha',
+
+  //
+  // The flags, options, that can be configured for this command.
+  //
+  flags: {
+    '--port': 'Port number that Metro Bundler should use.',
+    '--hostname': 'Hostname that Metro Bundler should use.',
+    '--using': 'Name of the test runner to use.',
+    '--watch': 'Don\'t exit when the tests complete but keep listening.',
+    '--no-silent': 'Do not suppress the output of Metro.',
+    '--require': 'Require module (before tests are executed).',
+    '--reset-cache': [
+      'Clear the Metro cache.',
+      'When the Metro bundler babel transform cache.'
+    ],
+    '--cache-location': 'Change the Metro cache location.'
+  }
+});

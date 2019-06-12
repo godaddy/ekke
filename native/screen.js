@@ -1,7 +1,7 @@
 import createRenderer from '../components/renderer';
 import { AppRegistry } from 'react-native';
 import diagnostics from 'diagnostics';
-import bridge from './bridge';
+import { events } from './bridge';
 import Ultron from 'ultron';
 
 //
@@ -21,7 +21,7 @@ const debug = diagnostics('ekke:screen');
  */
 class Screen {
   constructor(rootTag) {
-    this.bridge = new Ultron(bridge);   // Created a managed EventEmitter.
+    this.events = new Ultron(events);   // Created a managed EventEmitter.
     this.previous = this.discover();    // Name of the current mounted app.
     this.rootTag = rootTag;             // Reference to the rootTag
 
@@ -38,8 +38,8 @@ class Screen {
    * @public
    */
   manager(setState) {
-    this.bridge.remove('render');
-    this.bridge.on('render', (component, { resolve, reject }) => {
+    this.events.remove('render');
+    this.events.on('render', (component, { resolve, reject }) => {
       //
       // In the rare case where `render` is called on a component that is
       // no longer mounted, it could raise an exception, in that case

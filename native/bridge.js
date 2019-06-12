@@ -39,14 +39,14 @@ const key = '@ Ekke Ekke Ekke Ekke @';
 // single EventEmitter, to be a bridge between both execution context.
 //
 //
-const bridge = (global[key] = global[key] || new EventEmitter());
+const events = (global[key] = global[key] || new EventEmitter());
 
 //
 // Reason 2, We can't have duplicate React-Native includes.
 //
 // React-Native's native modules are registered in the modules
 //
-bridge.ReactNative = ReactNative;
+events.ReactNative = ReactNative;
 
 /**
  * Transfers a given React.createElement over the bridge so it can
@@ -58,15 +58,33 @@ bridge.ReactNative = ReactNative;
  */
 function render(component) {
   return new Promise(function delay(resolve, reject) {
-    bridge.emit('render', component, {
+    events.emit('render', component, {
       resolve,
       reject
     });
   });
 }
 
+/**
+ * Retrieves a given plugin function.
+ *
+ * @param {String} name Name of the registered plugin function.
+ * @returns {Promise<function>} Callback when the component is mounted.
+ * @public
+ */
+function use(name) {
+  return new Promise(function searching(resolve, reject) {
+    events.emit('plugin:registry', function transferred(registry) {
+      if (registry.has(name)) return resolve(registry.get(name));
+
+      reject(new Error(`The requested plugin(${name}) was never registered`));
+    });
+  });
+}
+
 export {
-  bridge as default,
+  events as default,
   render,
-  bridge
+  use,
+  events
 };

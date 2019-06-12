@@ -32,8 +32,8 @@ describe('(ekke) createRenderer', function () {
     class Square extends React.Component {
       render() {
         return (
-          <View style={{ backgroundColor: 'blue', width: 100, height: 100}} />
-        )
+          <View style={{ backgroundColor: 'blue', width: 100, height: 100 }} />
+        );
       }
     }
 

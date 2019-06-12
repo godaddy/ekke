@@ -46,14 +46,6 @@ function capture(fn) {
     debug('captured uncaught exception', args);
 
     //
-    // Before we do anything else, we want to make sure that we restore
-    // the previous handler, so any errors that our own error handler is
-    // causing, is properly caught, instead of being re-directed to this
-    // function, potentially causing an infinite loop of pain of suffering.
-    //
-    restore();
-
-    //
     // We only want to call our own error handler as this exception happened
     // while running the test suite we don't accidenlty want to trigger any
     // error reporting that shouldn't be triggered.

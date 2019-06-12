@@ -7,7 +7,9 @@
  * @param {Object} API The plugin API.
  * @returns
  */
-module.exports = function plugin({ modify }) {
+module.exports = function plugin({ modify, register }) {
+  register();
+
   modify('process.browser', function browser() {
     return true;
   });

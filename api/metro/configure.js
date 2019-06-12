@@ -126,8 +126,8 @@ async function configure(flags, ekke) {
   //
   const filePath = await source({
     browser: await ekke.exec('modify', 'process.browser', false),
-    library: await ekke.exec('modify', 'library'),
-    requires: [].concat(flags.require),
+    library: await ekke.exec('modify', 'library', false),
+    requires: [].concat(flags.require).filter(Boolean),
     plugins: Array.from(ekke.registry),
     moduleName,
     globs

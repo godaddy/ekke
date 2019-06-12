@@ -25,14 +25,16 @@ async function runner({ screen, subway, config, plugin }) {
 
   const { destroy, teardown } = destroyer(async function destoryed() {
     debug('tearing down the whole test suite');
-    await plugin.exec('modify', 'teardown');
+    await plugin.exec('modifiers', 'teardown');
 
     screen.restore();
     plugin.reset();
   });
 
   const { run } = tasked(async function completion(e) {
-    const { err, complete } = plugin.exec('modify', 'complete', { err: e, complete: true });
+    if (e) debug('received an error while executing a task', e.message);
+
+    const { err, complete } = plugin.exec('modifiers', 'complete', { err: e, complete: true });
 
     //
     // We used to have an error, but our plugin system modified it to no error
@@ -62,10 +64,10 @@ async function runner({ screen, subway, config, plugin }) {
 
   await run(async (fail) => {
     destroy(uncaught(async (err, fatal) => {
-      ({ err, fatal } = this.plugin.exec('modify', 'uncaught', { err, fatal }));
+      ({ err, fatal } = plugin.exec('modifiers', 'uncaught', { err, fatal }));
 
       if (err) complete(err, { fatal, uncaught: true });
-    }))
+    }));
   });
 
   //
@@ -89,8 +91,8 @@ async function runner({ screen, subway, config, plugin }) {
   let scope;
 
   await run(async () => {
-    const local = this.eva.local();
-    const sandbox = this.eva.sandproxy(local);
+    const local = eva.local();
+    const sandbox = eva.sandproxy(local);
 
     scope = await eva.exec(sandbox);
 
@@ -110,13 +112,21 @@ async function runner({ screen, subway, config, plugin }) {
     const results = plugins();
 
     Object.keys(results).forEach((key) => {
+      //
+      // Our source file uses require statements to import that plugins. If
+      // these plugins are written in an ES6 format, they would expose a
+      // `default` which we should use instead.
+      //
+      const target = results[key];
+      const fn = typeof target === 'function' ? target : target.default;
+
       debug(`registering plugin($key)`);
-      plugin.use(results[key]);
+      plugin.use(fn);
     });
   });
 
-  config = await plugin.exec('modify', 'config', config);
-  await plugin.exec('modify', 'before', { requires, globs, config });
+  config = await plugin.exec('modifiers', 'config', config);
+  await plugin.exec('modifiers', 'before', { requires, globs, config });
 
   //
   // Execute all files that should be ran before we require the test files.
@@ -135,7 +145,7 @@ async function runner({ screen, subway, config, plugin }) {
   // to execute. In case of runners, this is the executing the test suite.
   //
   await run(async (done) => {
-    await plugin.exec('modify', 'run', { done });
+    await plugin.exec('modifiers', 'run', { done });
 
     done(new Error('None of the plugins executed the done function'));
   });

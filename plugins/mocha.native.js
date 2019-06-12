@@ -38,6 +38,8 @@ export default function plugin({ modify }) {
     // way when the tests are loaded they can actually access `describe` & `it`.
     //
     mocha.suite.emit('pre-require', global, '', mocha);
+
+    console.log('before lol');
   });
 
   modify('run', function run({ done }) {

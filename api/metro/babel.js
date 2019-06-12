@@ -44,8 +44,8 @@ function plugins(existing = [], options) {
 
   return [
     [require.resolve('babel-plugin-rewrite-require'), {
-      throwForNonStringLiteral: true,
-      Object.assign(aliases, read('babel.alias') || {})
+      aliases: Object.assign(aliases, read('babel.alias') || {}),
+      throwForNonStringLiteral: true
     }],
 
     ...optional,

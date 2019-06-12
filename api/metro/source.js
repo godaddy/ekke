@@ -61,7 +61,7 @@ function transform(sources = [], prefix = '') {
  */
 async function source(data) {
   const { moduleName, browser, requires, plugins, globs } = data;
-  const library = 'library' in data ? `require(${JSON.stringify(data.library)})` : JSON.stringify(data.library);
+  const library = data.library ? `require(${JSON.stringify(data.library)})` : JSON.stringify(data.library);
 
   //
   // Create dummy content for the source which allows to get access to:

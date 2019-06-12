@@ -25,7 +25,7 @@ describe('(ekke) Plugin', function () {
     it('is called with the plugin API', function (next) {
       plug.use(function (api) {
         assume(api).is.a('object');
-        assume(api).is.length(4);
+        assume(api).is.length(5);
 
         assume(api.modify).is.a('function');
         assume(api.modify).equals(plug.modify);
@@ -35,6 +35,9 @@ describe('(ekke) Plugin', function () {
 
         assume(api.define).is.a('function');
         assume(api.destroy).is.a('function');
+
+        assume(api.exec).is.a('function');
+        assume(api.exec).equals(plug.exec);
 
         next();
       });

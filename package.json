@@ -86,7 +86,7 @@
     "chai": "^4.2.0",
     "eslint": "^6.0.0",
     "eslint-config-godaddy-react": "^5.0.0",
-    "eslint-plugin-json": "^1.4.0",
+    "eslint-plugin-json": "^2.0.1",
     "eslint-plugin-jsx-a11y": "^6.2.1",
     "eslint-plugin-mocha": "^6.0.0",
     "eslint-plugin-react": "^7.13.0",

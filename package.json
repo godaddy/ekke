@@ -94,7 +94,7 @@
     "nock": "^10.0.6",
     "nyc": "^14.1.0",
     "react": "^16.8.6",
-    "react-native": "^0.59.8",
+    "react-native": "^0.61.3",
     "require-poisoning": "^2.0.0",
     "setup-env": "^1.2.2",
     "tap-spec": "^5.0.0",

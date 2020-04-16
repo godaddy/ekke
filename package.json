@@ -68,7 +68,7 @@
     "prop-types": "^15.7.2",
     "querystringify": "^2.1.1",
     "references": "0.0.0",
-    "stream-browserify": "^2.0.2",
+    "stream-browserify": "^3.0.0",
     "tick-tock": "^1.0.0",
     "ultron": "^1.1.1",
     "yeast": "^0.1.2"

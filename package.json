@@ -59,7 +59,7 @@
     "es-paint": "^2.0.0",
     "eventemitter3": "^4.0.0",
     "failure": "^1.1.1",
-    "glob": "^7.1.3",
+    "glob": "^7.2.3",
     "json-stringify-safe": "^5.0.1",
     "millisecond": "^0.1.2",
     "node-libs-react-native": "^1.0.3",

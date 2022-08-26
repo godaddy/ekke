@@ -57,7 +57,7 @@
     "babel-plugin-rewrite-require": "^1.14.5",
     "diagnostics": "^2.0.0",
     "es-paint": "^2.0.0",
-    "eventemitter3": "^4.0.0",
+    "eventemitter3": "^4.0.7",
     "failure": "^1.1.1",
     "glob": "^7.1.3",
     "json-stringify-safe": "^5.0.1",

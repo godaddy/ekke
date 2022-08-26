@@ -62,7 +62,7 @@
     "glob": "^7.1.3",
     "json-stringify-safe": "^5.0.1",
     "millisecond": "^0.1.2",
-    "node-libs-react-native": "^1.0.3",
+    "node-libs-react-native": "^1.2.1",
     "one-time": "^1.0.0",
     "process": "^0.11.10",
     "prop-types": "^15.7.2",
